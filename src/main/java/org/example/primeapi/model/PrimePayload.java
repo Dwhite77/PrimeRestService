@@ -19,7 +19,7 @@ import java.util.List;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JacksonXmlRootElement(localName = "PrimeResponse")
-@JsonPropertyOrder({"algorithm", "limit", "threads", "primes", "total"})
+@JsonPropertyOrder({"algorithm", "limit", "threads", "primes", "total", "durationMs"})
 public class PrimePayload {
 
     @JsonProperty("algorithm")
@@ -43,6 +43,9 @@ public class PrimePayload {
     @JacksonXmlProperty(localName = "total")
     private int total;
 
+    @JsonProperty("durationMs")
+    @JacksonXmlProperty(localName = "durationMs")
+    private long durationMs;
 
     public PrimePayload() {}
 
