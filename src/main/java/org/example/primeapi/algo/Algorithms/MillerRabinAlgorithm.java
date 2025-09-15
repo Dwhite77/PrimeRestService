@@ -1,5 +1,6 @@
-package org.example.primeapi.algo;
+package org.example.primeapi.algo.Algorithms;
 
+import org.example.primeapi.algo.AbstractPrimeAlgorithm;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

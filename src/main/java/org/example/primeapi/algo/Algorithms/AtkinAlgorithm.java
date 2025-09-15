@@ -1,5 +1,6 @@
-package org.example.primeapi.algo;
+package org.example.primeapi.algo.Algorithms;
 
+import org.example.primeapi.algo.AbstractPrimeAlgorithm;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ import java.util.List;
  * <ul>
  *   <li>Marks numbers n where:
  *     <ul>
- *       <li>n = 4x² + y² and n mod 12 = 1 or 5</li>
+ *       <li>n = 4x² + y² and n mod 12 = 1 or 5 (mod means n/12 remainder = 1 or 5)</li>
  *       <li>n = 3x² + y² and n mod 12 = 7</li>
  *       <li>n = 3x² − y² and n mod 12 = 11 (when x > y)</li>
  *     </ul>

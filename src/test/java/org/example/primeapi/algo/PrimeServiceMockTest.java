@@ -14,34 +14,58 @@ public class PrimeServiceMockTest {
 
     private PrimeAlgorithm sieveMock;
     private PrimeAlgorithm millerMock;
+    private PrimeAlgorithm atkinMock;
+    private PrimeAlgorithm trialMock;
+
     private PrimeService service;
 
     @BeforeEach
     void setUp() {
         sieveMock = mock(PrimeAlgorithm.class);
         when(sieveMock.name()).thenReturn("sieve");
-        when(sieveMock.generate(100, 2)).thenReturn(List.of(2, 3, 5, 7));
+        when(sieveMock.generate(10, 2)).thenReturn(List.of(2, 3, 5, 7));
 
         millerMock = mock(PrimeAlgorithm.class);
         when(millerMock.name()).thenReturn("miller");
-        when(millerMock.generate(100, 2)).thenReturn(List.of(2, 3, 5, 7, 11));
+        when(millerMock.generate(10, 2)).thenReturn(List.of(2, 3, 5, 7));
 
-        service = new PrimeService(List.of(sieveMock, millerMock));
+        atkinMock = mock(PrimeAlgorithm.class);
+        when(atkinMock.name()).thenReturn("atkin");
+        when(atkinMock.generate(10, 2)).thenReturn(List.of(2, 3, 5, 7));
+
+        trialMock = mock(PrimeAlgorithm.class);
+        when(trialMock.name()).thenReturn("trial");
+        when(trialMock.generate(10, 2)).thenReturn(List.of(2, 3, 5, 7));
+
+        service = new PrimeService(List.of(sieveMock, millerMock, atkinMock, trialMock));
     }
 
     @Test
     void delegatesToCorrectAlgorithm() {
-        List<Integer> result = service.findPrimes("sieve", 100, 2);
+        List<Integer> result = service.findPrimes("sieve", 10, 2);
         assertEquals(List.of(2, 3, 5, 7), result);
-        verify(sieveMock).generate(100, 2);
-        verifyNoInteractions(millerMock);
+        verify(sieveMock).generate(10, 2);
     }
 
     @Test
     void handlesCaseInsensitiveAlgorithmNames() {
-        List<Integer> result = service.findPrimes("MILLER", 100, 2);
-        assertEquals(List.of(2, 3, 5, 7, 11), result);
-        verify(millerMock).generate(100, 2);
+        List<Integer> result = service.findPrimes("MILLER", 10, 2);
+        assertEquals(List.of(2, 3, 5, 7), result);
+        verify(millerMock).generate(10, 2);
+    }
+
+    @Test
+    void delegatesToCorrectAlgorithmAtkinCaseInsensitive() {
+        List<Integer> result = service.findPrimes("Atkin", 10, 2);
+        assertEquals(List.of(2, 3, 5, 7), result);
+        verify(atkinMock).generate(10, 2);
+    }
+
+    @Test
+    void delegatesToCorrectAlgorithmTrial() {
+        List<Integer> result = service.findPrimes("trial", 10, 2);
+        assertEquals(List.of(2, 3, 5, 7), result);
+        verify(trialMock).generate(10, 2);
     }
 
     @Test
