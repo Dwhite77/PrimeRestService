@@ -3,6 +3,7 @@ package org.example.primeapi.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import java.time.Instant;
 @Data
 @Builder
 @JacksonXmlRootElement(localName = "ErrorPayload")
+@JsonPropertyOrder({"status", "error", "message", "path", "timestamp"})
 public class ErrorPayload {
 
     @JsonProperty("status")
