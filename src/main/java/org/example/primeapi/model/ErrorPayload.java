@@ -36,6 +36,5 @@ public class ErrorPayload {
 
     @JsonProperty("timestamp")
     @JacksonXmlProperty(localName = "timestamp")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private Instant timestamp;
+    private String timestamp;
 }

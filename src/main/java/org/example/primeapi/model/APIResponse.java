@@ -16,9 +16,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JacksonXmlRootElement(localName = "ApiResponse")
-@JsonRootName("ApiResponse")
-public class ApiResponse {
+@JacksonXmlRootElement(localName = "APIResponse")
+@JsonRootName("APIResponse")
+public class APIResponse {
 
     @JsonProperty("httpStatus")
     @JacksonXmlProperty(localName = "httpStatus")
@@ -34,26 +34,25 @@ public class ApiResponse {
 
     @JsonProperty("timestamp")
     @JacksonXmlProperty(localName = "timestamp")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private Instant timestamp;
+    private String timestamp;
 
     public boolean isSuccessful() {
         return data != null && error == null && httpStatus == 200;
     }
 
-    public static ApiResponse success(PrimePayload data, int httpStatus) {
-        return ApiResponse.builder()
+    public static APIResponse success(PrimePayload data, int httpStatus) {
+        return APIResponse.builder()
                 .data(data)
                 .httpStatus(httpStatus)
-                .timestamp(Instant.now())
+                .timestamp(Instant.now().toString())
                 .build();
     }
 
-    public static ApiResponse error(ErrorPayload error, int httpStatus) {
-        return ApiResponse.builder()
+    public static APIResponse error(ErrorPayload error, int httpStatus) {
+        return APIResponse.builder()
                 .error(error)
                 .httpStatus(httpStatus)
-                .timestamp(Instant.now())
+                .timestamp(Instant.now().toString())
                 .build();
     }
 }

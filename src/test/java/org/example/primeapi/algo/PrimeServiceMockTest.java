@@ -1,6 +1,5 @@
 package org.example.primeapi.algo;
 
-import org.example.primeapi.algo.PrimeAlgorithm;
 import org.example.primeapi.service.PrimeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

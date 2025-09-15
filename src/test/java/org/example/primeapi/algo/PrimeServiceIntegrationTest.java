@@ -190,6 +190,8 @@ public class PrimeServiceIntegrationTest {
 
     @Test
     void allAlgorithmsIncludeLargePrimeUpperBoundAndLogExecutionTime1Threads() {
+        assumeTrue(runBenchmerk); // this test take a while to run so skips if the flag is off
+
 
         int threads = 1;
 
@@ -215,6 +217,7 @@ public class PrimeServiceIntegrationTest {
 
     @Test
     void allAlgorithmsIncludeLargePrimeUpperBoundAndLogExecutionTime2Threads() {
+        assumeTrue(runBenchmerk); // this test take a while to run so skips if the flag is off
 
         int threads = 2;
 
@@ -240,6 +243,7 @@ public class PrimeServiceIntegrationTest {
 
     @Test
     void allAlgorithmsIncludeLargePrimeUpperBoundAndLogExecutionTime4Threads() {
+        assumeTrue(runBenchmerk); // this test take a while to run so skips if the flag is off
 
         int threads = 4;
 

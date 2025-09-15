@@ -17,7 +17,7 @@ public class ErrorResponseBuilder {
                 .error(errorLabel)
                 .message(message)
                 .path(path)
-                .timestamp(Instant.now())
+                .timestamp(Instant.now().toString())
                 .build();
     }
 }

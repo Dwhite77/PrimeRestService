@@ -1,10 +1,14 @@
 package org.example.primeapi.controller;
 
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.primeapi.algo.Algos;
-import org.example.primeapi.model.ApiResponse;
+import org.example.primeapi.model.APIResponse;
 import org.example.primeapi.model.ErrorPayload;
 import org.example.primeapi.model.PrimePayload;
 import org.example.primeapi.service.PrimeService;
@@ -30,8 +34,17 @@ public class PrimeController {
     @Autowired
     private PrimeService primeService;
 
+
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successful operation", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = PrimePayload.class)),
+            }),
+            @ApiResponse(responseCode = "400", description = "Invalid input or algorithm", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
+            })
+    })
     @GetMapping(produces = { "application/json", "application/xml" })
-    public ApiResponse getPrimes(
+    public APIResponse getPrimes(
             @RequestParam int limit,
             @RequestParam(defaultValue = "trial") String algorithm,
             @RequestParam(defaultValue = "1") int threads,
@@ -40,18 +53,18 @@ public class PrimeController {
         log.info("Algorithm '{}' requested for limit {} with {} thread(s)", algorithm, limit, threads);
 
         if (limit < 0 || threads < 1) {ErrorPayload error = ErrorResponseBuilder.badRequest("Limit must be non-negative and threads must be >= 1", request);
-            return ApiResponse.error(error, 400);
+            return APIResponse.error(error, 400);
         }
 
         if (!Algos.isValidAlgo(algorithm)) {
             ErrorPayload error = ErrorResponseBuilder.badRequest("Unsupported algorithm: " + algorithm, request);
-            return ApiResponse.error(error, 400);
+            return APIResponse.error(error, 400);
         }
 
         List<Integer> primes = primeService.findPrimes(algorithm.toLowerCase(), limit, threads);
 
         PrimePayload payload = new PrimePayload(algorithm, limit, threads, primes, primes.size(), primeService.getDurationMs());
 
-        return ApiResponse.success(payload, 200);
+        return APIResponse.success(payload, 200);
     }
 }
