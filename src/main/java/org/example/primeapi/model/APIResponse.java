@@ -1,16 +1,18 @@
 package org.example.primeapi.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.Instant;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+
 
 @JsonPropertyOrder({"httpStatus", "data", "error", "timestamp"})
 @Data
@@ -44,7 +46,7 @@ public class APIResponse {
         return APIResponse.builder()
                 .data(data)
                 .httpStatus(httpStatus)
-                .timestamp(Instant.now().toString())
+                .timestamp(nowFormatted())
                 .build();
     }
 
@@ -52,7 +54,14 @@ public class APIResponse {
         return APIResponse.builder()
                 .error(error)
                 .httpStatus(httpStatus)
-                .timestamp(Instant.now().toString())
+                .timestamp(nowFormatted())
                 .build();
+    }
+
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
+            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss").withZone(ZoneId.systemDefault());
+
+    private static String nowFormatted() {
+        return TIMESTAMP_FORMATTER.format(Instant.now());
     }
 }
