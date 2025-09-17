@@ -17,9 +17,10 @@ public class TrialAlgorithm extends AbstractPrimeAlgorithm {
 
     @Override
     public List<Integer> generate(int upperLimit, int threads) {
-        if (shouldSkip("Trial", upperLimit, threads)) return List.of();
         return runThreaded("Trial", 2, upperLimit, threads, this::trialChunk);
     }
+
+
 
     private List<Integer> trialChunk(int start, int end) {
         return IntStream.rangeClosed(start, end)
