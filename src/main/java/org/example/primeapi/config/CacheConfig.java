@@ -15,4 +15,4 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         return new ConcurrentMapCacheManager("docs");
     }
-}
+}//todo look at cache and see if you can work out how we use it to save values
