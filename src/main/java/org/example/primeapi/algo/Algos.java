@@ -3,7 +3,7 @@ package org.example.primeapi.algo;
 import java.util.Optional;
 
 public enum Algos {
-    TRIAL, SIEVE, ATKINS, MILLER;
+    TRIAL, SIEVE, ATKIN, MILLER;
 
     public static Optional<Algos> from(String value) {
         try {
