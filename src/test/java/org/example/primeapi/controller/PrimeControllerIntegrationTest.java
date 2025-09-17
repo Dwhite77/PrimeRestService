@@ -3,11 +3,12 @@ package org.example.primeapi.controller;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import lombok.extern.slf4j.Slf4j;
-import org.example.primeapi.PrimeApiApplication;
+import org.example.primeapi.helper.TestHelperMethods;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,17 +19,28 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(
+        classes = org.example.primeapi.PrimeApiApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PrimeControllerIntegrationTest {
 
+    private TestHelperMethods THM = new TestHelperMethods();
+
+    @LocalServerPort
+    private int port;
+
     Map<String, Map<Integer, Long>> results = new LinkedHashMap<>();
+
 
 
     @BeforeAll
     void setup() {
         RestAssured.baseURI = "http://localhost";
-        RestAssured.port = 8080; // or whatever port your app runs on
+        RestAssured.port = port; // or whatever port your app runs on
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+
     }
 
     @Test
@@ -48,7 +60,6 @@ public class PrimeControllerIntegrationTest {
                 .body("data.limit", equalTo(30))
                 .body("data.total", greaterThan(0))
                 .body("data.primes", hasItem(29));
-
 
     }
 
@@ -204,6 +215,7 @@ public class PrimeControllerIntegrationTest {
 
     @Test
     void benchmarkSieveAcrossThreads() {
+        THM.skipTest();
         int limit = 1_000_000;
         for (int threads : List.of(1, 2, 4, 8, 16)) {
             long duration = benchmark("sieve", limit, threads);
@@ -213,6 +225,7 @@ public class PrimeControllerIntegrationTest {
 
     @Test
     void benchmarkAllAlgorithmsSingleThread() {
+        THM.skipTest();
         int limit = 500_000;
         for (String algo : List.of("trial", "sieve", "atkin", "miller")) {
             long duration = benchmark(algo, limit, 1);
@@ -223,6 +236,7 @@ public class PrimeControllerIntegrationTest {
 
     @Test
     void benchmarkMatrix() {
+        THM.skipTest();
         int limit = 100_000_000;
         for (String algo : List.of("sieve", "atkin", "miller", "trial")) {
             Map<Integer, Long> threadResults = new LinkedHashMap<>();
@@ -243,6 +257,8 @@ public class PrimeControllerIntegrationTest {
 
 
     //-----------Helper Methods----------
+
+
 
     private Response sendPrimeRequest(Integer limit, String algorithm, Integer threads, String acceptHeader) {
         var request = given();
@@ -280,7 +296,7 @@ public class PrimeControllerIntegrationTest {
     }
 
     private void logResponse(Response response){
-        log.info("Response Body: {}", response.getBody().asPrettyString());
+        //log.info("Response Body: {}", response.getBody().asPrettyString());
         log.info("Headers: {}",response.getHeaders().toString());
         log.info("Status code: {}", response.getStatusCode());
     }

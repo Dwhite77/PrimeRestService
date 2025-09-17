@@ -68,7 +68,6 @@ public class MillerRabinAlgorithm extends AbstractPrimeAlgorithm {
 
     @Override
     public List<Integer> generate(int upperLimit, int threads) {
-        if (shouldSkip("Miller-Rabin", upperLimit, threads)) return List.of();
         return runThreaded("Miller-Rabin", 2, upperLimit, threads, this::chunk);
     }
 

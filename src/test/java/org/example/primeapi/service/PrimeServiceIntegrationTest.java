@@ -1,4 +1,4 @@
-package org.example.primeapi.algo;
+package org.example.primeapi.service;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -6,23 +6,25 @@ import org.example.primeapi.algo.Algorithms.AtkinAlgorithm;
 import org.example.primeapi.algo.Algorithms.MillerRabinAlgorithm;
 import org.example.primeapi.algo.Algorithms.SieveAlgorithm;
 import org.example.primeapi.algo.Algorithms.TrialAlgorithm;
+import org.example.primeapi.helper.TestHelperMethods;
 import org.example.primeapi.model.PrimePayload;
-import org.example.primeapi.service.PrimeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
+@SpringBootTest
 @Slf4j
 public class PrimeServiceIntegrationTest {
 
-    private boolean runBenchmerk = false;
+    private TestHelperMethods THM = new TestHelperMethods();
 
+    @Autowired
     private PrimeService service;
 
     private final List<PrimePayload> benchmarkPayloads = new ArrayList<>();
@@ -37,7 +39,7 @@ public class PrimeServiceIntegrationTest {
             982451653    // largest known 9-digit prime
     );
 
-
+/*
     @BeforeEach
     void setUp() {
         service = new PrimeService(List.of(
@@ -46,13 +48,12 @@ public class PrimeServiceIntegrationTest {
                 new TrialAlgorithm(),
                 new AtkinAlgorithm()
         ));
-    }
+    }*/
 
 
     @Test
     void benchmarkTest() {
-        assumeTrue(runBenchmerk); // this test take a while to run so skips if the flag is off
-
+        THM.skipTest();
         List<Integer> threads = List.of(
                 1, 2, 4, 8
         );
@@ -141,7 +142,7 @@ public class PrimeServiceIntegrationTest {
             log.info("Testing algorithm '{}' with limit=1", algoName);
             List<Integer> result = service.findPrimes(algoName, 1, 1);
             log.info("Result: {}", result);
-            assertTrue(result.size()==1, "Expected result for '" + algoName + "' with limit=1 is 1");
+            assertTrue(result.equals(List.of()), "Expected result for '" + algoName + "' with limit=1 is 1");
         });
     }
 
@@ -151,7 +152,7 @@ public class PrimeServiceIntegrationTest {
             log.info("Testing algorithm '{}' with limit=2", algoName);
             List<Integer> result = service.findPrimes(algoName, 2, 1);
             log.info("Result: {}", result);
-            assertTrue(result.size()==2, "Expected 2 result for '" + algoName + "' with limit=2");
+            assertTrue(result.equals(List.of(2)), "Expected 2 result for '" + algoName + "' with limit=2");
         });
     }
 
@@ -190,8 +191,7 @@ public class PrimeServiceIntegrationTest {
 
     @Test
     void allAlgorithmsIncludeLargePrimeUpperBoundAndLogExecutionTime1Threads() {
-        assumeTrue(runBenchmerk); // this test take a while to run so skips if the flag is off
-
+        THM.skipTest();
 
         int threads = 1;
 
@@ -217,7 +217,7 @@ public class PrimeServiceIntegrationTest {
 
     @Test
     void allAlgorithmsIncludeLargePrimeUpperBoundAndLogExecutionTime2Threads() {
-        assumeTrue(runBenchmerk); // this test take a while to run so skips if the flag is off
+        THM.skipTest();
 
         int threads = 2;
 
@@ -243,7 +243,7 @@ public class PrimeServiceIntegrationTest {
 
     @Test
     void allAlgorithmsIncludeLargePrimeUpperBoundAndLogExecutionTime4Threads() {
-        assumeTrue(runBenchmerk); // this test take a while to run so skips if the flag is off
+        THM.skipTest();
 
         int threads = 4;
 

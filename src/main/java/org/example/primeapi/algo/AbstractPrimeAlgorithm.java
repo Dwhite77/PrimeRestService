@@ -1,6 +1,8 @@
 package org.example.primeapi.algo;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.primeapi.util.ThreadPoolManager;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,14 +51,10 @@ import java.util.stream.Stream;
  *
  * <p>Designed for extension by deterministic and probabilistic prime algorithms.
  */
+@Slf4j
 public abstract class AbstractPrimeAlgorithm implements PrimeAlgorithm {
 
-    protected static final int MAX_LIMIT = 1_000_000_000;
-    protected static final int MAX_THREADS = 128;
 
-    protected boolean shouldSkip(String label, int upperLimit, int threads) {
-        return upperLimit < 2 || threads > upperLimit || upperLimit > MAX_LIMIT || threads > MAX_THREADS;
-    }
 
     protected List<Integer> runThreaded(String label, int lowerLimit, int upperLimit, int threads,
                                         BiFunction<Integer, Integer, List<Integer>> chunkProcessor) {

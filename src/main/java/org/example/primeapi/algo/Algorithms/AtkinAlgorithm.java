@@ -65,7 +65,6 @@ public class AtkinAlgorithm extends AbstractPrimeAlgorithm {
 
     @Override
     public List<Integer> generate(int upperLimit, int threads) {
-        if (shouldSkip("Segmented Atkin", upperLimit, threads)) return List.of();
 
         int sqrtLimit = (int) Math.sqrt(upperLimit);
         List<Integer> basePrimes = findAtkinChunk(2, sqrtLimit);

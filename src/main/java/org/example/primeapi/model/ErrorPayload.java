@@ -9,12 +9,12 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
 @JacksonXmlRootElement(localName = "ErrorPayload")
-@JsonPropertyOrder({"status", "error", "message", "path", "timestamp"})
+@JsonPropertyOrder({"status", "error", "message", "path"})
 public class ErrorPayload {
 
     @JsonProperty("status")
@@ -34,7 +34,5 @@ public class ErrorPayload {
     @JacksonXmlProperty(localName = "path")
     private String path;
 
-    @JsonProperty("timestamp")
-    @JacksonXmlProperty(localName = "timestamp")
-    private String timestamp;
+
 }
