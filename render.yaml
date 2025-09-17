@@ -11,3 +11,7 @@ services:
         value: 10000
       - key: BENCHMARK
         value: true
+      - key: MAXLIMIT
+        value: 1000000000
+      - key: MAXTHREADS
+        value: 128
