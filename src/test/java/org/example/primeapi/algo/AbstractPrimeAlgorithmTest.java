@@ -1,55 +1,44 @@
 package org.example.primeapi.algo;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.example.primeapi.service.PrimeService;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SpringBootTest
 @Slf4j
 public class AbstractPrimeAlgorithmTest {
 
-    private final AbstractPrimeAlgorithm algo = new AbstractPrimeAlgorithm() {
-        @Override
-        public String name() { return "dummy"; }
-
-        @Override
-        public List<Integer> generate(int upperLimit, int threads) {
-            return List.of(); // not needed for these tests
-        }
-    };
-
-    @BeforeAll
-    static void initSuite() {
-        log.info("Starting PrimeService integration test suite");
-    }
-
-    @BeforeEach
-    void initTest() {
-        log.debug("Setting up test instance");
-    }
-
-    @AfterEach
-    void tearDown(){
-        log.info("Test Completed");
-    }
+    @Autowired
+    private PrimeService primeService;
 
     @Test
     void shouldSkipWhenUpperLimitTooLow() {
-        assertTrue(algo.shouldSkip("test", 1, 1));
+        assertTrue(primeService.shouldSkip("test", 1, 1));
     }
 
     @Test
     void shouldSkipWhenThreadsTooHigh() {
-        assertTrue(algo.shouldSkip("test", 100, 200));
+        int excessiveThreads = primeService.getMaxThreads() + 1;
+        assertTrue(primeService.shouldSkip("test", 1000, excessiveThreads));
     }
 
     @Test
     void shouldSkipWhenUpperLimitTooHigh() {
-        assertTrue(algo.shouldSkip("test", AbstractPrimeAlgorithm.MAX_LIMIT + 1, 1));
+        int excessiveLimit = primeService.getMaxLimit() + 1;
+        assertTrue(primeService.shouldSkip("test", excessiveLimit, 1));
+    }
+
+    @Test
+    void shouldSkipWhenThreadsExceedLimit() {
+        assertTrue(primeService.shouldSkip("test", 5, 10));
+    }
+
+    @Test
+    void shouldNotSkipForValidInputs() {
+        assertTrue(!primeService.shouldSkip("test", 1000, 4));
     }
 }
