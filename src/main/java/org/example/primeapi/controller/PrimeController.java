@@ -13,6 +13,7 @@ import org.example.primeapi.model.ErrorPayload;
 import org.example.primeapi.model.PrimePayload;
 import org.example.primeapi.service.PrimeService;
 import org.example.primeapi.util.ErrorResponseBuilder;
+import org.example.primeapi.view.LandingPageBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -71,5 +72,9 @@ public class PrimeController {
         );
 
         return ResponseEntity.ok(APIResponse.success(payload, 200));
+    }
+    @GetMapping(path = "/", produces = "text/html")
+    public String landingPage() {
+        return LandingPageBuilder.getHtml();
     }
 }
