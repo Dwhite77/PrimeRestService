@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: msvc-prime-api
+    env: java
+    buildCommand: mvn clean install
+    startCommand: java -jar msvc-prime-api.jar
+    envVars:
+      - key: JAVA_VERSION
+        value: 17
+      - key: PORT
+        value: 10000
+      - key: BENCHMARK
+        value: true

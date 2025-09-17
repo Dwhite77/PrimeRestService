@@ -15,6 +15,7 @@ import org.example.primeapi.service.PrimeService;
 import org.example.primeapi.util.ErrorResponseBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -43,8 +44,9 @@ public class PrimeController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
             })
     })
+
     @GetMapping(produces = { "application/json", "application/xml" })
-    public APIResponse getPrimes(
+    public ResponseEntity<APIResponse> getPrimes(
             @RequestParam int limit,
             @RequestParam(defaultValue = "trial") String algorithm,
             @RequestParam(defaultValue = "1") int threads,
@@ -52,19 +54,22 @@ public class PrimeController {
     ) {
         log.info("Algorithm '{}' requested for limit {} with {} thread(s)", algorithm, limit, threads);
 
-        if (limit < 0 || threads < 1) {ErrorPayload error = ErrorResponseBuilder.badRequest("Limit must be non-negative and threads must be >= 1", request);
-            return APIResponse.error(error, 400);
+        if (limit < 0 || threads < 1) {
+            ErrorPayload error = ErrorResponseBuilder.badRequest("Limit must be non-negative and threads must be >= 1", request);
+            return ResponseEntity.status(400).body(APIResponse.error(error, 400));
         }
 
         if (!Algos.isValidAlgo(algorithm)) {
             ErrorPayload error = ErrorResponseBuilder.badRequest("Unsupported algorithm: " + algorithm, request);
-            return APIResponse.error(error, 400);
+            return ResponseEntity.status(400).body(APIResponse.error(error, 400));
         }
 
         List<Integer> primes = primeService.findPrimes(algorithm.toLowerCase(), limit, threads);
 
-        PrimePayload payload = new PrimePayload(algorithm, limit, threads, primes, primes.size(), primeService.getDurationMs());
+        PrimePayload payload = new PrimePayload(
+                algorithm, limit, threads, primes, primes.size(), primeService.getDurationMs()
+        );
 
-        return APIResponse.success(payload, 200);
+        return ResponseEntity.ok(APIResponse.success(payload, 200));
     }
 }
