@@ -10,6 +10,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,11 +18,12 @@ import java.util.Map;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 @SpringBootTest(
         classes = org.example.primeapi.PrimeApiApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PrimeControllerIntegrationTest {
@@ -45,41 +47,16 @@ public class PrimeControllerIntegrationTest {
 
     @Test
     void testValidPrimeRequest() {
-        Response response = given()
-                .queryParam("limit", 30)
-                .queryParam("algorithm", "sieve")
-                .queryParam("threads", 2)
-                .when()
-                .get("/api/primes");
-
+        Response response = sendPrimeRequest(30, "sieve", 2, "application/json");
         logResponse(response);
-
-        response.then()
-                .statusCode(200)
-                .body("data.algorithm", equalTo("sieve"))
-                .body("data.limit", equalTo(30))
-                .body("data.total", greaterThan(0))
-                .body("data.primes", hasItem(29));
-
+        assertSuccess(response, 30, "sieve", 2);
     }
 
     @Test
     void testInvalidAlgorithm() {
-        Response response = given()
-                .queryParam("limit", 30)
-                .queryParam("algorithm", "invalid")
-                .when()
-                .get("/api/primes");
-
+        Response response = sendPrimeRequest(30, "invalid", 1, "application/json");
         logResponse(response);
-
-
-
-        response.then()
-                .statusCode(400)
-                .body("error.message", containsString("Unsupported algorithm"));
-
-
+        response.then().statusCode(400).body("error.message", containsString("Unsupported algorithm"));
     }
 
 
@@ -169,7 +146,7 @@ public class PrimeControllerIntegrationTest {
     void testMissingLimitParameter() {
         Response response = sendPrimeRequest(null, "sieve", 2, null);
         logResponse(response);
-        response.then().statusCode(400); // assuming Spring throws a 400 for missing required param
+        response.then().statusCode(400);
     }
 
     @Test
@@ -255,6 +232,228 @@ public class PrimeControllerIntegrationTest {
     }
 
 
+
+    //-----------------------------------------------
+
+    @Test
+    void missingLimitParameterReturns400() {
+        Response response = given()
+                .accept("application/json")
+                .queryParam("algorithm", "sieve")
+                .queryParam("threads", 2)
+                .get("/api/primes");
+
+        response.then()
+                .statusCode(400)
+                .body("error.message", containsString("Missing required parameter"));
+    }
+
+    @Test
+    void invalidLimitTypeReturns400() {
+        Response response = given()
+                .accept("application/json")
+                .queryParam("limit", "abc")
+                .queryParam("algorithm", "sieve")
+                .queryParam("threads", 2)
+                .get("/api/primes");
+
+        response.then()
+                .statusCode(400)
+                .body("error.message", containsString("Invalid value for parameter"));
+    }
+
+    @Test
+    void unsupportedAlgorithmReturns400() {
+        Response response = sendPrimeRequest(100, "unknown", 2, "application/json");
+
+        response.then()
+                .statusCode(400)
+                .body("error.message", containsString("Unsupported algorithm"));
+    }
+
+    @Test
+    void unknownPathReturns404() {
+        Response response = given()
+                .accept("application/json")
+                .get("/api/does-not-exist");
+
+        response.then()
+                .statusCode(404)
+                .body("error.message", containsString("Unknown path"));
+    }
+
+    @Test
+    void postToGetEndpointReturns405() {
+        Response response = given()
+                .accept("application/json")
+                .post("/api/primes");
+
+        response.then()
+                .statusCode(405)
+                .body("error.message", containsString("Method"));
+    }
+
+
+
+    @Test
+    void swaggerUiIsAccessible() {
+        Response response = given()
+                .when()
+                .get("/swagger-ui/index.html");
+
+        response.then()
+                .statusCode(200)
+                .contentType(containsString("text/html"));
+    }
+
+    @Test
+    void rootPathRedirectsToLandingPage() {
+        Response response = given()
+                .redirects().follow(false) // prevent auto-follow so we can inspect the redirect
+                .when()
+                .get("/");
+
+        response.then()
+                .statusCode(302) // Spring issues a 302 redirect
+                .header("Location", containsString("/api/info"));
+    }
+
+    @Test
+    void landingPageIsAccessibleAndContainsReadmeLink() {
+        Response response = given()
+                .accept("text/html")
+                .when()
+                .get("/api/info");
+
+        response.then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Prime API Landing Page"))
+                .body(containsString("Documentation"));
+    }
+    @Test
+    void rootPathRedirectsAndServesLandingPage() {
+        Response response = given()
+                .accept("text/html")
+                .redirects().follow(true)
+                .when()
+                .get("/");
+
+        response.then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Prime API Landing Page"))
+                .body(containsString("Documentation"));
+    }
+
+
+
+
+    @Test
+    void concurrentRequestsAreHandledSafely() {
+        int limit = 10_000;
+        int threads = 4;
+
+        Runnable task = () -> {
+            Response response = sendPrimeRequest(limit, "sieve", threads, null);
+            response.then().statusCode(200);
+        };
+
+        List<Thread> threadPool = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            threadPool.add(new Thread(task));
+        }
+
+        threadPool.forEach(Thread::start);
+        threadPool.forEach(t -> {
+            try { t.join(); } catch (InterruptedException ignored) {}
+        });
+    }
+
+    @Test
+    void shouldSkipTriggersCorrectlyForInvalidInputs() {
+        List.of(
+                Map.of("limit", 1, "threads", 1),
+                Map.of("limit", 100, "threads", 129),
+                Map.of("limit", 1_000_000_001, "threads", 4),
+                Map.of("limit", 5, "threads", 10)
+        ).forEach(params -> {
+            Response response = sendPrimeRequest(
+                    (Integer) params.get("limit"),
+                    "sieve",
+                    (Integer) params.get("threads"),
+                    null
+            );
+            response.then().statusCode(200);
+            List<Integer> primes = response.jsonPath().getList("data.primes", Integer.class);
+            assertTrue(primes.isEmpty(), "Expected empty result due to skip logic");
+        });
+    }
+
+    @Test
+    void exportBenchmarkResultsToCsvFormat() {
+        THM.skipTest();
+        int limit = 100_000;
+        StringBuilder csv = new StringBuilder("Algorithm,Threads,DurationMs\n");
+
+        for (String algo : List.of("trial", "sieve", "atkin", "miller")) {
+            for (int threads : List.of(1, 2, 4, 8)) {
+                long duration = benchmark(algo, limit, threads);
+                csv.append(String.format("%s,%d,%d\n", algo, threads, duration));
+            }
+        }
+
+        log.info("\nBenchmark CSV:\n{}", csv);
+    }
+
+    @Test
+    void printBenchmarkSummaryTable() {
+        THM.skipTest();
+        int limit = 100_000;
+        Map<String, Map<Integer, Long>> matrix = new LinkedHashMap<>();
+
+        for (String algo : List.of("trial", "sieve", "atkin", "miller")) {
+            Map<Integer, Long> threadMap = new LinkedHashMap<>();
+            for (int threads : List.of(1, 2, 4, 8)) {
+                long duration = benchmark(algo, limit, threads);
+                threadMap.put(threads, duration);
+            }
+            matrix.put(algo, threadMap);
+        }
+
+        StringBuilder table = new StringBuilder();
+        table.append(String.format("%-10s | %-8s | %-12s\n", "Algorithm", "Threads", "Duration (ms)"));
+        table.append("----------------------------------------\n");
+
+        matrix.forEach((algo, threadMap) -> {
+            threadMap.forEach((threads, duration) -> {
+                table.append(String.format("%-10s | %-8d | %-12d\n", algo, threads, duration));
+            });
+        });
+
+        log.info("\nBenchmark Summary Table:\n{}", table);
+    }
+
+
+
+    @Test
+    void errorPayloadStructureIsValidForMissingLimit() {
+        Response response = given()
+                .accept("application/json")
+                .queryParam("algorithm", "sieve")
+                .queryParam("threads", 2)
+                .get("/api/primes");
+
+        response.then()
+                .statusCode(400)
+                .body("error.status", equalTo(400))
+                .body("error.error", equalTo("Bad Request"))
+                .body("error.message", containsString("Missing required parameter"))
+                .body("error.path", equalTo("/api/primes"))
+                .body("timestamp", matchesRegex("\\d{2}-\\d{2}-\\d{4} \\d{2}:\\d{2}:\\d{2}"))
+                .body("successful", equalTo(false));
+
+    }
 
     //-----------Helper Methods----------
 

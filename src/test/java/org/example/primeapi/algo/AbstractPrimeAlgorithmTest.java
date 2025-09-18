@@ -8,8 +8,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
-@Slf4j
+@SpringBootTest(
+        classes = org.example.primeapi.PrimeApiApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)@Slf4j
 public class AbstractPrimeAlgorithmTest {
 
     @Autowired

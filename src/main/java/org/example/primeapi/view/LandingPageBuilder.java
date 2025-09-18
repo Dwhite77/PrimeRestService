@@ -45,8 +45,8 @@ public class LandingPageBuilder {
 
                 <div class="section">
                     <h2>📄 Documentation</h2>
-                    <p>See the full README for benchmarks, algorithm details, and contributor notes:</p>
-                    <p><a href="/README.md" target="_blank">View README</a></p>
+                    <p>See the docs pages for more info on the algorithms and error handling:</p>
+                    <p><a href="/docs" target="_blank">Documentation</a></p>
                 </div>
 
                 <div class="section">
