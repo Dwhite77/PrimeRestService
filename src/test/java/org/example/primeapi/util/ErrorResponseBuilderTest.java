@@ -6,74 +6,98 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.time.Instant;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @Slf4j
 class ErrorResponseBuilderTest {
 
-    @Test
-    void testBuildCreatesCorrectPayload() {
-        String message = "Invalid input";
-        String path = "/api/primes";
-        int status = 422;
-        String label = "Unprocessable Entity";
+    private HttpServletRequest mockRequest(String uri) {
+        logTestStep("Mocking HttpServletRequest with URI: " + uri);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRequestURI()).thenReturn(uri);
+        return request;
+    }
 
-        log.info("Testing build() with status={}, label='{}'", status, label);
-        ErrorPayload payload = ErrorResponseBuilder.build(message, path, status, label);
-
-        log.info("Generated payload: {}", payload);
+    private void assertPayload(ErrorPayload payload, int status, String label, String message, String path) {
+        logTestStep("Asserting payload: " + payload);
         assertEquals(status, payload.getStatus());
         assertEquals(label, payload.getError());
         assertEquals(message, payload.getMessage());
         assertEquals(path, payload.getPath());
+    }
 
+    private void logTestStep(String description) {
+        log.info("🔍 {}", description);
+    }
+
+    @Test
+    void testBuildCreatesCorrectPayload() {
+        ErrorPayload payload = ErrorResponseBuilder.build("Invalid input", "/api/primes", 422, "Unprocessable Entity");
+        assertPayload(payload, 422, "Unprocessable Entity", "Invalid input", "/api/primes");
     }
 
     @Test
     void testBadRequestUsesRequestUri() {
-        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        when(mockRequest.getRequestURI()).thenReturn("/api/test");
-
-        String message = "Missing parameters";
-        log.info("Testing badRequest() with URI='/api/test'");
-        ErrorPayload payload = ErrorResponseBuilder.badRequest(message, mockRequest);
-
-        log.info("Generated payload: {}", payload);
-        assertEquals(400, payload.getStatus());
-        assertEquals("Bad Request", payload.getError());
-        assertEquals(message, payload.getMessage());
-        assertEquals("/api/test", payload.getPath());
-
-    }
-
-    @Test
-    void testBuildWithNullValues() {
-        log.info("Testing build() with null values");
-        ErrorPayload payload = ErrorResponseBuilder.build(null, null, 500, null);
-
-        log.info("Generated payload: {}", payload);
-        assertEquals(500, payload.getStatus());
-        assertNull(payload.getError());
-        assertNull(payload.getMessage());
-        assertNull(payload.getPath());
-
+        ErrorPayload payload = ErrorResponseBuilder.badRequest("Missing parameters", mockRequest("/api/test"));
+        assertPayload(payload, 400, "Bad Request", "Missing parameters", "/api/test");
     }
 
     @Test
     void testNotFoundPayload() {
-        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        when(mockRequest.getRequestURI()).thenReturn("/api/missing");
+        ErrorPayload payload = ErrorResponseBuilder.notFound("Resource not found", mockRequest("/api/missing"));
+        assertPayload(payload, 404, "Not Found", "Resource not found", "/api/missing");
+    }
 
-        log.info("Testing notFound() with URI='/api/missing'");
-        ErrorPayload payload = ErrorResponseBuilder.notFound("Resource not found", mockRequest);
+    @Test
+    void testUnauthorizedPayload() {
+        ErrorPayload payload = ErrorResponseBuilder.unauthorized("Authentication required", mockRequest("/api/secure"));
+        assertPayload(payload, 401, "Unauthorized", "Authentication required", "/api/secure");
+    }
 
-        log.info("Generated payload: {}", payload);
-        assertEquals(404, payload.getStatus());
-        assertEquals("Not Found", payload.getError());
-        assertEquals("Resource not found", payload.getMessage());
-        assertEquals("/api/missing", payload.getPath());
+    @Test
+    void testForbiddenPayload() {
+        ErrorPayload payload = ErrorResponseBuilder.forbidden("Access denied", mockRequest("/api/admin"));
+        assertPayload(payload, 403, "Forbidden", "Access denied", "/api/admin");
+    }
+
+    @Test
+    void testMethodNotAllowedPayload() {
+        ErrorPayload payload = ErrorResponseBuilder.methodNotAllowed("POST not supported", mockRequest("/api/primes"));
+        assertPayload(payload, 405, "Method Not Allowed", "POST not supported", "/api/primes");
+    }
+
+    @Test
+    void testConflictPayload() {
+        ErrorPayload payload = ErrorResponseBuilder.conflict("Resource already exists", mockRequest("/api/resource"));
+        assertPayload(payload, 409, "Conflict", "Resource already exists", "/api/resource");
+    }
+
+    @Test
+    void testUnprocessableEntityPayload() {
+        ErrorPayload payload = ErrorResponseBuilder.unprocessableEntity("Invalid format", mockRequest("/api/data"));
+        assertPayload(payload, 422, "Unprocessable Entity", "Invalid format", "/api/data");
+    }
+
+    @Test
+    void testInternalServerErrorPayload() {
+        ErrorPayload payload = ErrorResponseBuilder.internalServerError("Unexpected error", mockRequest("/api/failure"));
+        assertPayload(payload, 500, "Internal Server Error", "Unexpected error", "/api/failure");
+    }
+
+    @Test
+    void testServiceUnavailablePayload() {
+        ErrorPayload payload = ErrorResponseBuilder.serviceUnavailable("Service temporarily unavailable", mockRequest("/api/maintenance"));
+        assertPayload(payload, 503, "Service Unavailable", "Service temporarily unavailable", "/api/maintenance");
+    }
+
+    @Test
+    void testBuildWithNullValues() {
+        logTestStep("Testing build() with null values");
+        ErrorPayload payload = ErrorResponseBuilder.build(null, null, 500, null);
+        assertEquals(500, payload.getStatus());
+        assertNull(payload.getError());
+        assertNull(payload.getMessage());
+        assertNull(payload.getPath());
     }
 }

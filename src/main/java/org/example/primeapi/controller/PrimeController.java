@@ -16,11 +16,18 @@ import org.example.primeapi.service.PrimeService;
 import org.example.primeapi.util.ErrorResponseBuilder;
 import org.example.primeapi.view.LandingPageBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -59,16 +66,20 @@ public class PrimeController {
             @ApiResponse(responseCode = "200", description = "Successful operation", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = PrimePayload.class))
             }),
-            @ApiResponse(responseCode = "400", description = "Invalid input or algorithm", content = {
+            @ApiResponse(responseCode = "400", description = "Bad request due to invalid parameters or unsupported algorithm", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
             }),
             @ApiResponse(responseCode = "404", description = "Path not found", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
             }),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = {
+            @ApiResponse(responseCode = "405", description = "HTTP method not supported", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
+            }),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
             })
     })
+
     @GetMapping(path="/api/primes", produces = { "application/json", "application/xml" })
     public ResponseEntity<APIResponse> getPrimes(
             @RequestParam int limit,
@@ -97,6 +108,63 @@ public class PrimeController {
         return ResponseEntity.ok(APIResponse.success(payload, 200));
     }
 
+
+    //----------------Documentation Controller--------------
+
+    @GetMapping("/docs")
+    public String listMarkdownFiles() {
+        File docsDir = new File("docs");
+        File[] files = docsDir.listFiles((dir, name) -> name.endsWith(".md"));
+
+        StringBuilder html = new StringBuilder("<html><body><h1>📚 Documentation Index</h1><ul>");
+        if (files != null) {
+            Arrays.stream(files)
+                    .sorted(Comparator.comparing(File::getName))
+                    .forEach(file -> {
+                        String name = file.getName();
+                        html.append(String.format("<li><a href=\"/docs/view/%s\">%s</a></li>", name, name));
+                    });
+        } else {
+            html.append("<li>No documentation files found.</li>");
+        }
+        html.append("</ul></body></html>");
+        return html.toString();
+    }
+
+    @GetMapping("/docs/view/{filename}")
+    public ResponseEntity<String> viewMarkdownFile(@PathVariable String filename) {
+        File file = new File("docs", filename);
+        if (!file.exists() || !filename.endsWith(".md")) {
+            return ResponseEntity.status(404).body("File not found: " + filename);
+        }
+
+        try {
+            String content = Files.readString(file.toPath());
+            return ResponseEntity.ok()
+                    .header("Content-Type", "text/plain; charset=UTF-8")
+                    .body(content);
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Error reading file: " + filename);
+        }
+    }
+
+
+
+    //-----------------Testing Endpoints----------
+
+    @GetMapping("/api/trigger-runtime-exception")
+    public APIResponse triggerException() {
+        throw new RuntimeException("Boom");
+    }
+
+    @GetMapping("/api/trigger-response-status")
+    public void triggerResponseStatus() {
+        throw new ResponseStatusException(HttpStatus.I_AM_A_TEAPOT, "I'm a teapot");
+    }
+    @GetMapping("/api/trigger-illegal-argument")
+    public void triggerIllegalArgument() {
+        throw new IllegalArgumentException("Illegal argument");
+    }
 
 
 

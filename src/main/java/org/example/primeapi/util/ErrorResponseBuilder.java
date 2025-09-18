@@ -22,6 +22,10 @@ public class ErrorResponseBuilder {
         return build(message, request.getRequestURI(), 404, "Not Found");
     }
 
+    public static ErrorPayload methodNotAllowed(String message, HttpServletRequest request) {
+        return build(message, request.getRequestURI(), 405, "Method Not Allowed");
+    }
+
     public static ErrorPayload conflict(String message, HttpServletRequest request) {
         return build(message, request.getRequestURI(), 409, "Conflict");
     }
@@ -37,6 +41,7 @@ public class ErrorResponseBuilder {
     public static ErrorPayload serviceUnavailable(String message, HttpServletRequest request) {
         return build(message, request.getRequestURI(), 503, "Service Unavailable");
     }
+
 
     public static ErrorPayload build(String message, String path, int status, String errorLabel) {
         return ErrorPayload.builder()

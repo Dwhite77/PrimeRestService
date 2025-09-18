@@ -47,41 +47,16 @@ public class PrimeControllerIntegrationTest {
 
     @Test
     void testValidPrimeRequest() {
-        Response response = given()
-                .queryParam("limit", 30)
-                .queryParam("algorithm", "sieve")
-                .queryParam("threads", 2)
-                .when()
-                .get("/api/primes");
-
+        Response response = sendPrimeRequest(30, "sieve", 2, "application/json");
         logResponse(response);
-
-        response.then()
-                .statusCode(200)
-                .body("data.algorithm", equalTo("sieve"))
-                .body("data.limit", equalTo(30))
-                .body("data.total", greaterThan(0))
-                .body("data.primes", hasItem(29));
-
+        assertSuccess(response, 30, "sieve", 2);
     }
 
     @Test
     void testInvalidAlgorithm() {
-        Response response = given()
-                .queryParam("limit", 30)
-                .queryParam("algorithm", "invalid")
-                .when()
-                .get("/api/primes");
-
+        Response response = sendPrimeRequest(30, "invalid", 1, "application/json");
         logResponse(response);
-
-
-
-        response.then()
-                .statusCode(400)
-                .body("error.message", containsString("Unsupported algorithm"));
-
-
+        response.then().statusCode(400).body("error.message", containsString("Unsupported algorithm"));
     }
 
 
@@ -256,6 +231,70 @@ public class PrimeControllerIntegrationTest {
         });
     }
 
+
+
+    //-----------------------------------------------
+
+    @Test
+    void missingLimitParameterReturns400() {
+        Response response = given()
+                .accept("application/json")
+                .queryParam("algorithm", "sieve")
+                .queryParam("threads", 2)
+                .get("/api/primes");
+
+        response.then()
+                .statusCode(400)
+                .body("error.message", containsString("Missing required parameter"));
+    }
+
+    @Test
+    void invalidLimitTypeReturns400() {
+        Response response = given()
+                .accept("application/json")
+                .queryParam("limit", "abc")
+                .queryParam("algorithm", "sieve")
+                .queryParam("threads", 2)
+                .get("/api/primes");
+
+        response.then()
+                .statusCode(400)
+                .body("error.message", containsString("Invalid value for parameter"));
+    }
+
+    @Test
+    void unsupportedAlgorithmReturns400() {
+        Response response = sendPrimeRequest(100, "unknown", 2, "application/json");
+
+        response.then()
+                .statusCode(400)
+                .body("error.message", containsString("Unsupported algorithm"));
+    }
+
+    @Test
+    void unknownPathReturns404() {
+        Response response = given()
+                .accept("application/json")
+                .get("/api/does-not-exist");
+
+        response.then()
+                .statusCode(404)
+                .body("error.message", containsString("Unknown path"));
+    }
+
+    @Test
+    void postToGetEndpointReturns405() {
+        Response response = given()
+                .accept("application/json")
+                .post("/api/primes");
+
+        response.then()
+                .statusCode(405)
+                .body("error.message", containsString("Method"));
+    }
+
+
+
     @Test
     void swaggerUiIsAccessible() {
         Response response = given()
@@ -397,7 +436,24 @@ public class PrimeControllerIntegrationTest {
 
 
 
+    @Test
+    void errorPayloadStructureIsValidForMissingLimit() {
+        Response response = given()
+                .accept("application/json")
+                .queryParam("algorithm", "sieve")
+                .queryParam("threads", 2)
+                .get("/api/primes");
 
+        response.then()
+                .statusCode(400)
+                .body("error.status", equalTo(400))
+                .body("error.error", equalTo("Bad Request"))
+                .body("error.message", containsString("Missing required parameter"))
+                .body("error.path", equalTo("/api/primes"))
+                .body("timestamp", matchesRegex("\\d{2}-\\d{2}-\\d{4} \\d{2}:\\d{2}:\\d{2}"))
+                .body("successful", equalTo(false));
+
+    }
 
     //-----------Helper Methods----------
 
