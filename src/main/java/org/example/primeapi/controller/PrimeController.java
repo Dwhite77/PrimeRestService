@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.primeapi.algo.Algos;
+
 import org.example.primeapi.model.APIResponse;
 import org.example.primeapi.model.ErrorPayload;
 import org.example.primeapi.model.PrimePayload;
@@ -15,14 +16,16 @@ import org.example.primeapi.service.PrimeService;
 import org.example.primeapi.util.ErrorResponseBuilder;
 import org.example.primeapi.view.LandingPageBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/primes")
+@RequestMapping("/")
 @Tag(name = "Prime API",
         description = """
         Returns prime numbers using selectable algorithms: trial, sieve, segmented.
@@ -36,17 +39,37 @@ public class PrimeController {
     @Autowired
     private PrimeService primeService;
 
+    @GetMapping
+    public RedirectView redirectToInfo(){
+        return new RedirectView("/api/info");
+    }
+
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Returns landing page HTML"),
+            @ApiResponse(responseCode = "404", description = "Page not found")
+    })
+    @GetMapping(path = "/api/info", produces = "text/html")
+    public String landingPage() {
+        return LandingPageBuilder.getHtml();
+    }
+
+
 
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successful operation", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = PrimePayload.class)),
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = PrimePayload.class))
             }),
             @ApiResponse(responseCode = "400", description = "Invalid input or algorithm", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
+            }),
+            @ApiResponse(responseCode = "404", description = "Path not found", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
+            }),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
             })
     })
-
-    @GetMapping(produces = { "application/json", "application/xml" })
+    @GetMapping(path="/api/primes", produces = { "application/json", "application/xml" })
     public ResponseEntity<APIResponse> getPrimes(
             @RequestParam int limit,
             @RequestParam(defaultValue = "trial") String algorithm,
@@ -73,8 +96,8 @@ public class PrimeController {
 
         return ResponseEntity.ok(APIResponse.success(payload, 200));
     }
-    @GetMapping(path = "/", produces = "text/html")
-    public String landingPage() {
-        return LandingPageBuilder.getHtml();
-    }
+
+
+
+
 }

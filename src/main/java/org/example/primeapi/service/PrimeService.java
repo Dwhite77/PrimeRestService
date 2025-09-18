@@ -18,10 +18,10 @@ public class PrimeService {
 
     private final Map<String, PrimeAlgorithm> algorithmMap;
 
-    @Value("${MAXLIMIT}")
+    @Value("${MAXLIMIT:1000000000}")
     private int maxLimit;
 
-    @Value("${MAXTHREADS}")
+    @Value("${MAXTHREADS:128}")
     private int maxThreads;
 
     @Getter

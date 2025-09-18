@@ -2,13 +2,9 @@ package org.example.primeapi.service;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.example.primeapi.algo.Algorithms.AtkinAlgorithm;
-import org.example.primeapi.algo.Algorithms.MillerRabinAlgorithm;
-import org.example.primeapi.algo.Algorithms.SieveAlgorithm;
-import org.example.primeapi.algo.Algorithms.TrialAlgorithm;
+
 import org.example.primeapi.helper.TestHelperMethods;
 import org.example.primeapi.model.PrimePayload;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,8 +14,11 @@ import java.util.List;
 
 
 import static org.junit.jupiter.api.Assertions.*;
-@SpringBootTest
-@Slf4j
+
+@SpringBootTest(
+        classes = org.example.primeapi.PrimeApiApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)@Slf4j
 public class PrimeServiceIntegrationTest {
 
     private TestHelperMethods THM = new TestHelperMethods();
