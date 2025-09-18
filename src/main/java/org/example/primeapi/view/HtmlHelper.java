@@ -12,7 +12,7 @@ import java.util.List;
 public class HtmlHelper {
 
     public static List<File> getMarkdownFiles() {
-        File docsDir = new File("docs");
+        File docsDir = new File("src/main/resources/docs");
         File[] files = docsDir.listFiles((dir, name) -> name.endsWith(".md"));
         return files == null ? List.of() :
                 Arrays.stream(files).sorted(Comparator.comparing(File::getName)).toList();
@@ -101,12 +101,12 @@ public class HtmlHelper {
     }
 
     public static boolean isValidMarkdownFile(String filename) {
-        File file = new File("docs", filename);
+        File file = new File("src/main/resources/docs", filename);
         return file.exists() && filename.endsWith(".md");
     }
 
     public static String readMarkdown(String filename) throws IOException {
-        return Files.readString(new File("docs", filename).toPath());
+        return Files.readString(new File("src/main/resources/docs", filename).toPath());
     }
 
     public static String convertMarkdownToHtml(String filename, String markdown) {
