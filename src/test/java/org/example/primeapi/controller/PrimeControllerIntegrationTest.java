@@ -328,8 +328,8 @@ public class PrimeControllerIntegrationTest {
         response.then()
                 .statusCode(200)
                 .contentType(containsString("text/html"))
-                .body(containsString("Welcome to the Prime API"))
-                .body(containsString("View README"));
+                .body(containsString("Prime API Landing Page"))
+                .body(containsString("Documentation"));
     }
     @Test
     void rootPathRedirectsAndServesLandingPage() {
@@ -342,8 +342,8 @@ public class PrimeControllerIntegrationTest {
         response.then()
                 .statusCode(200)
                 .contentType(containsString("text/html"))
-                .body(containsString("Welcome to the Prime API"))
-                .body(containsString("View README"));
+                .body(containsString("Prime API Landing Page"))
+                .body(containsString("Documentation"));
     }
 
 
