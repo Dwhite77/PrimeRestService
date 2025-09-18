@@ -1,29 +1,32 @@
-# PrimeRestService
-A Restful service which calculates and returns all the prime numbers up to and including a number provided
+# 🧠 Prime Algorithms Documentation
 
-### This will shortly be updated for now we will just store the requirements here for ease of access
+Welcome to the Prime API project! This repository benchmarks and documents various prime number generation algorithms, including trial division, sieves, and probabilistic methods. Below you'll find direct links to all documentation files.
 
+## 📄 Documentation Index
 
-# Technical Assessment – Backend developer
+- [Prime Algorithms Overview](src/main/resources/docs/prime-algorithms.md)
+- [Trial Division](src/main/resources/docs/trial.md)
+- [Sieve of Eratosthenes](src/main/resources/docs/sieve.md)
+- [Sieve of Atkin](src/main/resources/docs/atkin.md)
+- [Miller-Rabin Test](src/main/resources/docs/miller.md)
+- [Error Handling](src/main/resources/docs/error-handling.md)
+- [Project README](src/main/resources/docs/README.md)
 
-## Outline
-Write a RESTful service which calculates and returns all the prime numbers up to and including a number provided.
+## 🚀 API Highlights
 
-## Requirements
-- The project must be written in Java 17 or 20.
-- The project must use Maven OR Gradle to build, test and run.
-- The project must have unit (JUnit) and integration (Restassured or Karate) tests.
-- The project must be built upon Spring Boot.
-- The API must respond with valid JSON.
-- The API must be appropriately (to your discretion) documented.
-- You may use any other frameworks or libraries for support e.g. Lombok, Rest Assured etc.
-- The project must be accessible from Github – if you do not wish to make it public, please the users above to the repository:  TBC
+The Prime API supports multiple algorithms and thread configurations. You can:
+- Generate primes up to 1,000,000
+- Choose between trial, sieve, and segmented sieve
+- Benchmark performance across thread counts
 
+See [`prime-algorithms.md`](src/main/resources/docs/prime-algorithms.md) for detailed comparisons.
 
-## Optional Extensions
-- Deploy the solution to a chosen platform that we can access.
-- Consider supporting varying return content types such as XML based, that should be configurable using the requested media type.
-- Consider ways to improve overall performance e.g. caching results, concurrent algorithm.
-- Consider supporting multiple algorithms that can be switched based on optional parameters.
+## 🛠️ Developer Notes
 
+- All endpoints are documented and tested
+- Markdown rendering is optimized for contributor clarity
+- Error responses are standardized via `ErrorPayload`
 
+---
+
+Feel free to fork, contribute, or explore the docs above. Happy benchmarking!
