@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MillerRabinAlgorithm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PrimeNumberGenerator</a> &gt; <a href="index.source.html" class="el_package">org.example.primeapi.algo.Algorithms</a> &gt; <span class="el_source">MillerRabinAlgorithm.java</span></div><h1>MillerRabinAlgorithm.java</h1><pre class="source lang-java linenums">package org.example.primeapi.algo.Algorithms;
+
+import org.example.primeapi.algo.AbstractPrimeAlgorithm;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+
+/**
+ * Implements the Miller–Rabin primality test for generating prime candidates.
+ *
+ * &lt;p&gt;The Miller–Rabin test is a probabilistic algorithm used to determine whether a number is likely prime.
+ * It is based on properties of modular arithmetic and is particularly efficient for large integers.
+ * While it does not guarantee primality, it can be tuned to achieve extremely high confidence.
+ *
+ * &lt;p&gt;This implementation uses a fixed set of deterministic bases ({2, 3, 5, 7, 11}) which are sufficient
+ * to guarantee correctness for integers less than 2³². For larger ranges, the algorithm remains probabilistic.
+ *
+ * &lt;p&gt;Algorithm steps:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Express n − 1 as 2ʳ·d where d is odd&lt;/li&gt;
+ *   &lt;li&gt;For each base a:
+ *     &lt;ul&gt;
+ *       &lt;li&gt;Compute aᵈ mod n&lt;/li&gt;
+ *       &lt;li&gt;If result is 1 or n − 1, continue&lt;/li&gt;
+ *       &lt;li&gt;Otherwise, square repeatedly up to r − 1 times and check for n − 1&lt;/li&gt;
+ *       &lt;li&gt;If none match, n is composite&lt;/li&gt;
+ *     &lt;/ul&gt;
+ *   &lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Parallelization:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Input range is divided into chunks and processed concurrently&lt;/li&gt;
+ *   &lt;li&gt;Each thread applies the Miller–Rabin test independently&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Advantages:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Extremely fast for large numbers&lt;/li&gt;
+ *   &lt;li&gt;Works well for cryptographic applications and probabilistic filtering&lt;/li&gt;
+ *   &lt;li&gt;Thread-safe and scalable&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Limitations:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Not a true sieve—does not eliminate composites systematically&lt;/li&gt;
+ *   &lt;li&gt;Probabilistic nature means false positives are possible for very large n&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Usage:
+ * &lt;pre&gt;{@code
+ * List&lt;Integer&gt; primes = millerRabinAlgorithm.generate(1_000_000, 8);
+ * }&lt;/pre&gt;
+ *
+ * @author Dan
+ * @see org.example.primeapi.algo.PrimeAlgorithm
+ */
+@Component
+<span class="fc" id="L62">public class MillerRabinAlgorithm extends AbstractPrimeAlgorithm {</span>
+
+    @Override
+    public String name() {
+<span class="fc" id="L66">        return &quot;miller&quot;;</span>
+    }
+
+    @Override
+    public List&lt;Integer&gt; generate(int upperLimit, int threads) {
+<span class="fc" id="L71">        return runThreaded(&quot;Miller-Rabin&quot;, 2, upperLimit, threads, this::chunk);</span>
+    }
+
+    private List&lt;Integer&gt; chunk(int start, int end) {
+<span class="fc" id="L75">        return IntStream.rangeClosed(start, end)</span>
+<span class="fc" id="L76">                .filter(this::isProbablyPrime)</span>
+<span class="fc" id="L77">                .boxed()</span>
+<span class="fc" id="L78">                .collect(Collectors.toList());</span>
+    }
+
+    private boolean isProbablyPrime(int n) {
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (n &lt; 2) return false;</span>
+<span class="fc bfc" id="L83" title="All 4 branches covered.">        if (n == 2 || n == 3) return true;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (n % 2 == 0) return false;</span>
+
+<span class="fc" id="L86">        int r = 0, d = n - 1;</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        while (d % 2 == 0) {</span>
+<span class="fc" id="L88">            d /= 2;</span>
+<span class="fc" id="L89">            r++;</span>
+        }
+
+<span class="fc" id="L92">        int[] bases = {2, 3, 5, 7, 11};</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        for (int a : bases) {</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (a &gt;= n) continue;</span>
+<span class="fc" id="L95">            int x = modPow(a, d, n);</span>
+<span class="fc bfc" id="L96" title="All 4 branches covered.">            if (x == 1 || x == n - 1) continue;</span>
+
+<span class="fc" id="L98">            boolean passed = false;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            for (int i = 0; i &lt; r - 1; i++) {</span>
+<span class="fc" id="L100">                x = modPow(x, 2, n);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                if (x == n - 1) {</span>
+<span class="fc" id="L102">                    passed = true;</span>
+<span class="fc" id="L103">                    break;</span>
+                }
+            }
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (!passed) return false;</span>
+        }
+<span class="fc" id="L108">        return true;</span>
+    }
+
+    private int modPow(int base, int exp, int mod) {
+<span class="fc" id="L112">        long result = 1, b = base;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        while (exp &gt; 0) {</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">            if ((exp &amp; 1) == 1) result = (result * b) % mod;</span>
+<span class="fc" id="L115">            b = (b * b) % mod;</span>
+<span class="fc" id="L116">            exp &gt;&gt;= 1;</span>
+        }
+<span class="fc" id="L118">        return (int) result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

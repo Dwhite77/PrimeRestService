@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractPrimeAlgorithm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PrimeNumberGenerator</a> &gt; <a href="index.source.html" class="el_package">org.example.primeapi.algo</a> &gt; <span class="el_source">AbstractPrimeAlgorithm.java</span></div><h1>AbstractPrimeAlgorithm.java</h1><pre class="source lang-java linenums">package org.example.primeapi.algo;
+
+import lombok.extern.slf4j.Slf4j;
+import org.example.primeapi.util.ThreadPoolManager;
+import org.springframework.beans.factory.annotation.Value;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * Abstract base class for prime generation algorithms with support for parallel execution.
+ *
+ * &lt;p&gt;This class provides shared utilities for implementing scalable prime algorithms,
+ * including input validation and multithreaded chunk processing. Subclasses define
+ * specific generation strategies (e.g., sieving, probabilistic testing) while inheriting
+ * thread-safe execution patterns.
+ *
+ * &lt;p&gt;Features:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Validates input bounds and thread constraints via {@code shouldSkip}&lt;/li&gt;
+ *   &lt;li&gt;Distributes work across threads using {@code runThreaded}&lt;/li&gt;
+ *   &lt;li&gt;Aggregates results deterministically with deduplication and sorting&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Parallelization:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Input range is divided into evenly sized chunks&lt;/li&gt;
+ *   &lt;li&gt;Each chunk is processed concurrently via a {@code BiFunction}&lt;/li&gt;
+ *   &lt;li&gt;Thread pool is managed by {@code ThreadPoolManager}&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Usage:
+ * &lt;pre&gt;{@code
+ * List&lt;Integer&gt; primes = runThreaded(&quot;Sieve&quot;, 10_000, 100_000, 8, (start, end) -&gt; {
+ *     return sieveSegment(start, end, basePrimes);
+ * });
+ * }&lt;/pre&gt;
+ *
+ * &lt;p&gt;Limitations:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Thread count capped at {@code MAX_THREADS}&lt;/li&gt;
+ *   &lt;li&gt;Upper limit capped at {@code MAX_LIMIT}&lt;/li&gt;
+ *   &lt;li&gt;Caller must ensure chunk processor is thread-safe&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Designed for extension by deterministic and probabilistic prime algorithms.
+ */
+<span class="fc" id="L54">@Slf4j</span>
+<span class="fc" id="L55">public abstract class AbstractPrimeAlgorithm implements PrimeAlgorithm {</span>
+
+
+
+    protected List&lt;Integer&gt; runThreaded(String label, int lowerLimit, int upperLimit, int threads,
+                                        BiFunction&lt;Integer, Integer, List&lt;Integer&gt;&gt; chunkProcessor) {
+<span class="fc" id="L61">        ExecutorService executor = ThreadPoolManager.createFixedPool(threads, label);</span>
+<span class="fc" id="L62">        List&lt;Future&lt;List&lt;Integer&gt;&gt;&gt; futures = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L64">        int totalRange = upperLimit - lowerLimit + 1;</span>
+<span class="fc" id="L65">        int chunkSize = (int) Math.ceil((double) totalRange / threads);</span>
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (int i = 0; i &lt; threads; i++) {</span>
+<span class="fc" id="L68">            int start = lowerLimit + i * chunkSize;</span>
+<span class="fc" id="L69">            int end = Math.min(lowerLimit + (i + 1) * chunkSize - 1, upperLimit);</span>
+<span class="fc" id="L70">            futures.add(executor.submit(() -&gt; chunkProcessor.apply(start, end)));</span>
+        }
+
+<span class="fc" id="L73">        List&lt;Integer&gt; allPrimes = futures.stream()</span>
+<span class="fc" id="L74">                .flatMap(future -&gt; {</span>
+                    try {
+<span class="fc" id="L76">                        return future.get().stream();</span>
+<span class="nc" id="L77">                    } catch (InterruptedException | ExecutionException e) {</span>
+<span class="nc" id="L78">                        Thread.currentThread().interrupt();</span>
+<span class="nc" id="L79">                        return Stream.empty();</span>
+                    }
+                })
+<span class="fc" id="L82">                .distinct()</span>
+<span class="fc" id="L83">                .sorted()</span>
+<span class="fc" id="L84">                .collect(Collectors.toList());</span>
+
+<span class="fc" id="L86">        executor.shutdown();</span>
+<span class="fc" id="L87">        return allPrimes;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -11,21 +11,62 @@ import java.util.List;
 
 public class HtmlHelper {
 
-    public static List<File> getMarkdownFiles() {
-        File docsDir = new File("src/main/resources/docs");
-        File[] files = docsDir.listFiles((dir, name) -> name.endsWith(".md"));
-        return files == null ? List.of() :
-                Arrays.stream(files).sorted(Comparator.comparing(File::getName)).toList();
+
+
+    public static List<String> getMarkdownFiles() {
+        try {
+            var uri = HtmlHelper.class.getClassLoader().getResource("docs");
+            if (uri == null) return List.of();
+
+            File docsDir = new File(uri.toURI());
+            File[] files = docsDir.listFiles((dir, name) -> name.endsWith(".md"));
+            if (files == null) return List.of();
+
+            return Arrays.stream(files)
+                    .sorted(Comparator.comparing(File::getName))
+                    .map(File::getName)
+                    .toList();
+
+        } catch (Exception e) {
+            return List.of(); // fallback if running from inside a JAR
+        }
     }
 
-    public static String buildSidebar(List<File> files) {
+    public static List<String> getMarkdownFilenames() {
+        try {
+            var uri = HtmlHelper.class.getClassLoader().getResource("docs");
+            if (uri == null) return List.of();
+
+            File docsDir = new File(uri.toURI());
+            File[] files = docsDir.listFiles((dir, name) -> name.endsWith(".md"));
+            if (files == null) return List.of();
+
+            return Arrays.stream(files)
+                    .sorted(Comparator.comparing(File::getName))
+                    .map(File::getName)
+                    .toList();
+
+        } catch (Exception e) {
+            return List.of(); // fallback if running from inside a JAR
+        }
+    }
+
+    public static String buildSidebar(List<String> filenames) {
         StringBuilder sidebar = new StringBuilder("<div class=\"sidebar\"><h3>📄 Docs</h3><ul>");
-        for (File file : files) {
-            String name = file.getName();
+        for (String name : filenames) {
             sidebar.append(String.format("<li><a href=\"/docs/view/%s\">%s</a></li>", name, name));
         }
         sidebar.append("</ul></div>");
         return sidebar.toString();
+    }
+
+    public static String buildIndexContent(List<String> filenames) {
+        StringBuilder content = new StringBuilder("<h1>📚 Documentation Index</h1><ul>");
+        for (String name : filenames) {
+            content.append(String.format("<li><a href=\"/docs/view/%s\">%s</a></li>", name, name));
+        }
+        content.append("</ul>");
+        return content.toString();
     }
 
     public static String wrapHtml(String sidebar, String contentHtml, boolean includeBacklinks) {
@@ -101,14 +142,15 @@ public class HtmlHelper {
     }
 
     public static boolean isValidMarkdownFile(String filename) {
-        File file = new File("src/main/resources/docs", filename);
-        return file.exists() && filename.endsWith(".md");
+        return HtmlHelper.class.getClassLoader().getResource("docs/" + filename) != null;
     }
 
     public static String readMarkdown(String filename) throws IOException {
-        return Files.readString(new File("src/main/resources/docs", filename).toPath());
+        try (var in = HtmlHelper.class.getClassLoader().getResourceAsStream("docs/" + filename)) {
+            if (in == null) throw new IOException("Markdown file not found: " + filename);
+            return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
     }
-
     public static String convertMarkdownToHtml(String filename, String markdown) {
         String html = MarkdownConverter.toHtml(markdown);
         if (filename.equals("prime-algorithms.md")) {
@@ -191,14 +233,6 @@ public class HtmlHelper {
         return table.toString();
     }
 
-    public static String buildIndexContent(List<File> files) {
-        StringBuilder content = new StringBuilder("<h1>📚 Documentation Index</h1><ul>");
-        for (File file : files) {
-            String name = file.getName();
-            content.append(String.format("<li><a href=\"/docs/view/%s\">%s</a></li>", name, name));
-        }
-        content.append("</ul>");
-        return content.toString();
-    }
+
 
 }
