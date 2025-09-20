@@ -13,6 +13,6 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager("docs");
+        return new ConcurrentMapCacheManager("basePrimes","primes","docs");
     }
-}//todo look at cache and see if you can work out how we use it to save values
+}

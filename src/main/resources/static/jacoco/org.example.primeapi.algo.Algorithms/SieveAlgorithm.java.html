@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SieveAlgorithm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PrimeNumberGenerator</a> &gt; <a href="index.source.html" class="el_package">org.example.primeapi.algo.Algorithms</a> &gt; <span class="el_source">SieveAlgorithm.java</span></div><h1>SieveAlgorithm.java</h1><pre class="source lang-java linenums">package org.example.primeapi.algo.Algorithms;
+
+import org.example.primeapi.algo.AbstractPrimeAlgorithm;
+import org.example.primeapi.algo.BasePrimeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+
+import java.util.*;
+
+
+/**
+ * Implements the segmented Sieve of Eratosthenes for prime generation.
+ *
+ * &lt;p&gt;This algorithm efficiently computes all prime numbers up to a given upper limit
+ * using a two-phase approach: base prime generation followed by segmented sieving.
+ * It is deterministic, cache-friendly, and well-suited for parallel execution.
+ *
+ * &lt;p&gt;Base primes are computed up to √n using the classic sieve. These primes are then
+ * used to eliminate composites in higher segments, enabling scalable prime generation
+ * for large ranges.
+ *
+ * &lt;p&gt;Algorithm steps:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Compute all primes ≤ √n using the standard sieve&lt;/li&gt;
+ *   &lt;li&gt;Divide the range [√n + 1, n] into chunks&lt;/li&gt;
+ *   &lt;li&gt;For each chunk:
+ *     &lt;ul&gt;
+ *       &lt;li&gt;Mark all numbers as prime&lt;/li&gt;
+ *       &lt;li&gt;For each base prime p:
+ *         &lt;ul&gt;
+ *           &lt;li&gt;Find the first multiple of p in the chunk&lt;/li&gt;
+ *           &lt;li&gt;Mark all multiples of p as composite&lt;/li&gt;
+ *         &lt;/ul&gt;
+ *       &lt;/li&gt;
+ *     &lt;/ul&gt;
+ *   &lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Parallelization:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Chunks are processed concurrently using a thread pool&lt;/li&gt;
+ *   &lt;li&gt;Each thread performs independent sieving using shared base primes&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Advantages:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Deterministic and accurate for all ranges&lt;/li&gt;
+ *   &lt;li&gt;Highly efficient for large upper limits&lt;/li&gt;
+ *   &lt;li&gt;Thread-safe and cache-friendly&lt;/li&gt;
+ *   &lt;li&gt;Modular design supports future optimizations&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Limitations:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Memory usage grows with segment size&lt;/li&gt;
+ *   &lt;li&gt;Not suitable for primality testing of individual large numbers&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Usage:
+ * &lt;pre&gt;{@code
+ * List&lt;Integer&gt; primes = sieveAlgorithm.generate(1_000_000, 4);
+ * }&lt;/pre&gt;
+ */
+@Component
+<span class="fc" id="L66">public class SieveAlgorithm extends AbstractPrimeAlgorithm {</span>
+
+
+    @Autowired
+    private BasePrimeService basePrimeService;
+
+
+    @Override
+    public String name() {
+<span class="fc" id="L75">        return &quot;sieve&quot;;</span>
+    }
+
+    @Override
+    public List&lt;Integer&gt; generate(int upperLimit, int threads) {
+<span class="fc" id="L80">        int sqrtLimit = (int) Math.sqrt(upperLimit);</span>
+<span class="fc" id="L81">        List&lt;Integer&gt; basePrimes = basePrimeService.generateSieveBasePrimes(sqrtLimit);</span>
+
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (upperLimit &lt;= sqrtLimit) return basePrimes;</span>
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        List&lt;Integer&gt; segmentedPrimes = (threads &lt;= 1)</span>
+<span class="fc" id="L86">                ? sieveSegment(sqrtLimit + 1, upperLimit, basePrimes)</span>
+<span class="fc" id="L87">                : runThreaded(&quot;Sieve&quot;, sqrtLimit + 1, upperLimit, threads,</span>
+<span class="fc" id="L88">                (segmentStart, segmentEnd) -&gt; sieveSegment(segmentStart, segmentEnd, basePrimes));</span>
+
+<span class="fc" id="L90">        List&lt;Integer&gt; allPrimes = new ArrayList&lt;&gt;(basePrimes);</span>
+<span class="fc" id="L91">        allPrimes.addAll(segmentedPrimes);</span>
+<span class="fc" id="L92">        Collections.sort(allPrimes);</span>
+<span class="fc" id="L93">        return allPrimes;</span>
+    }
+
+
+
+    public List&lt;Integer&gt; generateBasePrimesForTesting(int limit) {
+<span class="fc" id="L99">        return basePrimeService.generateSieveBasePrimes(limit);</span>
+    }
+
+
+    /**
+     * Applies segmented sieve logic to eliminate composites in the range [segmentStart, segmentEnd].
+     */
+    private List&lt;Integer&gt; sieveSegment(int segmentStart, int segmentEnd, List&lt;Integer&gt; basePrimes) {
+<span class="fc" id="L107">        int segmentSize = segmentEnd - segmentStart + 1;</span>
+<span class="fc" id="L108">        boolean[] isPrimeCandidate = new boolean[segmentSize];</span>
+<span class="fc" id="L109">        Arrays.fill(isPrimeCandidate, true);</span>
+
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        for (int basePrime : basePrimes) {</span>
+<span class="fc" id="L112">            int primeSquared = basePrime * basePrime;</span>
+<span class="fc" id="L113">            int firstMultipleInSegment = Math.max(primeSquared,</span>
+                    ((segmentStart + basePrime - 1) / basePrime) * basePrime);
+
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            for (int multiple = firstMultipleInSegment; multiple &lt;= segmentEnd; multiple += basePrime) {</span>
+<span class="fc" id="L117">                isPrimeCandidate[multiple - segmentStart] = false;</span>
+            }
+<span class="fc" id="L119">        }</span>
+
+<span class="fc" id="L121">        List&lt;Integer&gt; confirmedPrimes = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        for (int offset = 0; offset &lt; segmentSize; offset++) {</span>
+<span class="fc" id="L123">            int candidate = segmentStart + offset;</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">            if (isPrimeCandidate[offset]) confirmedPrimes.add(candidate);</span>
+        }
+
+<span class="fc" id="L127">        return confirmedPrimes;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

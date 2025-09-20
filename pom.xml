@@ -43,10 +43,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
 
         <!-- RestAssured -->
         <dependency>
@@ -95,6 +91,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
+            <!-- JaCoCo Plugin -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -115,20 +112,23 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Copy JaCoCo Report into Static Resources -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>3.0.0</version>
                 <executions>
                     <execution>
-                        <id>copy-jacoco-exec</id>
+                        <id>copy-jacoco-to-static</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <target>
-                                <copy todir="${project.basedir}/src/main/resources/docs/jacoco" overwrite="true">
+                                <mkdir dir="${project.basedir}/src/main/resources/static/jacoco"/>
+                                <copy todir="${project.basedir}/src/main/resources/static/jacoco" overwrite="true" failonerror="false">
                                     <fileset dir="${project.build.directory}/site/jacoco"/>
                                 </copy>
                             </target>
@@ -136,6 +136,7 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 </project>

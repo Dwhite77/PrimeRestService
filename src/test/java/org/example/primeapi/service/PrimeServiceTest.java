@@ -44,7 +44,7 @@ public class PrimeServiceTest {
     @ParameterizedTest
     @MethodSource("algorithmTestCases")
     void testAlgorithmsReturnExpectedPrimes(String algorithm, int limit, int threads, AssertionType type, List<Integer> expected) {
-        List<Integer> primes = primeService.findPrimes(algorithm, limit, threads);
+        List<Integer> primes = primeService.findPrimes(algorithm, limit, threads, false);
 
         switch (type) {
             case EMPTY -> assertTrue(primes.isEmpty(), algorithm + " should return empty list for limit " + limit);

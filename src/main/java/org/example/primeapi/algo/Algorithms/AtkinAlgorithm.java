@@ -1,6 +1,9 @@
 package org.example.primeapi.algo.Algorithms;
 
 import org.example.primeapi.algo.AbstractPrimeAlgorithm;
+import org.example.primeapi.algo.BasePrimeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -58,6 +61,9 @@ import java.util.List;
 @Component
 public class AtkinAlgorithm extends AbstractPrimeAlgorithm {
 
+    @Autowired
+    private BasePrimeService basePrimeService;
+
     @Override
     public String name() {
         return "atkin";
@@ -67,7 +73,7 @@ public class AtkinAlgorithm extends AbstractPrimeAlgorithm {
     public List<Integer> generate(int upperLimit, int threads) {
 
         int sqrtLimit = (int) Math.sqrt(upperLimit);
-        List<Integer> basePrimes = findAtkinChunk(2, sqrtLimit);
+        List<Integer> basePrimes = basePrimeService.generateAtkinBasePrimes(2, sqrtLimit);
 
         if (threads <= 1 || upperLimit <= sqrtLimit + 1) {
             List<Integer> segmented = findSegmentedChunk(sqrtLimit + 1, upperLimit, basePrimes);
@@ -86,79 +92,79 @@ public class AtkinAlgorithm extends AbstractPrimeAlgorithm {
         return allPrimes;
     }
 
-    private List<Integer> findAtkinChunk(int start, int end) {
-        boolean[] isPrime = new boolean[end + 1];
-        int sqrt = (int) Math.sqrt(end);
 
-        for (int x = 1; x <= sqrt; x++) {
-            for (int y = 1; y <= sqrt; y++) {
-                int n = 4 * x * x + y * y;
-                if (n <= end && (n % 12 == 1 || n % 12 == 5)) isPrime[n] ^= true;
-
-                n = 3 * x * x + y * y;
-                if (n <= end && n % 12 == 7) isPrime[n] ^= true;
-
-                if (x > y) {
-                    n = 3 * x * x - y * y;
-                    if (n <= end && n % 12 == 11) isPrime[n] ^= true;
-                }
-            }
-        }
-
-        for (int i = 5; i <= sqrt; i++) {
-            if (isPrime[i]) {
-                int square = i * i;
-                for (int j = square; j <= end; j += square) {
-                    isPrime[j] = false;
-                }
-            }
-        }
-
-        List<Integer> primes = new ArrayList<>();
-        if (start <= 2 && end >= 2) primes.add(2);
-        if (start <= 3 && end >= 3) primes.add(3);
-
-        for (int i = Math.max(5, start); i <= end; i++) {
-            if (isPrime[i]) primes.add(i);
-        }
-
-        return primes;
+    public List<Integer> generateBasePrimesForTesting(int start, int end) {
+        return basePrimeService.generateAtkinBasePrimes(start, end);
     }
 
-    private List<Integer> findSegmentedChunk(int start, int end, List<Integer> basePrimes) {
-        int segmentSize = end - start + 1;
-        boolean[] isPrime = new boolean[segmentSize];
-        int sqrtEnd = (int) Math.sqrt(end);
 
-        for (int x = 1; x <= sqrtEnd; x++) {
-            for (int y = 1; y <= sqrtEnd; y++) {
-                int n = 4 * x * x + y * y;
-                if (n >= start && n <= end && (n % 12 == 1 || n % 12 == 5)) isPrime[n - start] ^= true;
+    private List<Integer> findSegmentedChunk(int lowerBound, int upperBound, List<Integer> basePrimes) {
+        int segmentSize = upperBound - lowerBound + 1;
+        boolean[] isPrimeCandidate = new boolean[segmentSize];
+        int sqrtUpperBound = (int) Math.sqrt(upperBound);
 
-                n = 3 * x * x + y * y;
-                if (n >= start && n <= end && n % 12 == 7) isPrime[n - start] ^= true;
+        applyAtkinFiltersToSegment(isPrimeCandidate, lowerBound, upperBound, sqrtUpperBound);
+        eliminateMultiplesOfPrimeSquaresInSegment(isPrimeCandidate, lowerBound, upperBound, basePrimes);
+
+        return collectConfirmedPrimesFromSegment(isPrimeCandidate, lowerBound, upperBound);
+    }
+
+
+
+    /**
+     * Applies Atkin's modular filters to identify prime candidates within the segment.
+     */
+    private void applyAtkinFiltersToSegment(boolean[] isPrimeCandidate, int lowerBound, int upperBound, int sqrtLimit) {
+        for (int x = 1; x <= sqrtLimit; x++) {
+            for (int y = 1; y <= sqrtLimit; y++) {
+
+                int candidate1 = 4 * x * x + y * y;
+                if (candidate1 >= lowerBound && candidate1 <= upperBound && (candidate1 % 12 == 1 || candidate1 % 12 == 5)) {
+                    isPrimeCandidate[candidate1 - lowerBound] ^= true;
+                }
+
+                int candidate2 = 3 * x * x + y * y;
+                if (candidate2 >= lowerBound && candidate2 <= upperBound && candidate2 % 12 == 7) {
+                    isPrimeCandidate[candidate2 - lowerBound] ^= true;
+                }
 
                 if (x > y) {
-                    n = 3 * x * x - y * y;
-                    if (n >= start && n <= end && n % 12 == 11) isPrime[n - start] ^= true;
+                    int candidate3 = 3 * x * x - y * y;
+                    if (candidate3 >= lowerBound && candidate3 <= upperBound && candidate3 % 12 == 11) {
+                        isPrimeCandidate[candidate3 - lowerBound] ^= true;
+                    }
                 }
             }
         }
+    }
 
-        for (int prime : basePrimes) {
-            int square = prime * prime;
-            int firstMultiple = ((start + square - 1) / square) * square;
-            for (int i = firstMultiple; i <= end; i += square) {
-                isPrime[i - start] = false;
+    /**
+     * Removes false positives by marking multiples of prime squares as non-prime within the segment.
+     */
+    private void eliminateMultiplesOfPrimeSquaresInSegment(boolean[] isPrimeCandidate, int lowerBound, int upperBound, List<Integer> basePrimes) {
+        for (int basePrime : basePrimes) {
+            int primeSquared = basePrime * basePrime;
+            int firstMultipleInSegment = ((lowerBound + primeSquared - 1) / primeSquared) * primeSquared;
+
+            for (int multiple = firstMultipleInSegment; multiple <= upperBound; multiple += primeSquared) {
+                isPrimeCandidate[multiple - lowerBound] = false;
+            }
+        }
+    }
+
+    /**
+     * Collects confirmed primes from the segment after filtering.
+     */
+    private List<Integer> collectConfirmedPrimesFromSegment(boolean[] isPrimeCandidate, int lowerBound, int upperBound) {
+        List<Integer> confirmedPrimes = new ArrayList<>();
+
+        for (int offset = 0; offset < isPrimeCandidate.length; offset++) {
+            int candidate = lowerBound + offset;
+            if (candidate >= 2 && isPrimeCandidate[offset]) {
+                confirmedPrimes.add(candidate);
             }
         }
 
-        List<Integer> primes = new ArrayList<>();
-        for (int i = 0; i < segmentSize; i++) {
-            int candidate = start + i;
-            if (candidate >= 2 && isPrime[i]) primes.add(candidate);
-        }
-
-        return primes;
+        return confirmedPrimes;
     }
 }

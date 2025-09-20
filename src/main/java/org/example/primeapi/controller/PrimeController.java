@@ -24,10 +24,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.Cache;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -37,6 +41,8 @@ public class PrimeController {
     @Autowired
     private PrimeService primeService;
 
+    @Autowired
+    private CacheManager cacheManager;
 
     @Tag(name = "Prime API", description = "Endpoints for prime number generation and benchmarking")
     @Operation(
@@ -82,6 +88,7 @@ public class PrimeController {
             @RequestParam int limit,
             @RequestParam(defaultValue = "trial") String algorithm,
             @RequestParam(defaultValue = "1") int threads,
+            @RequestParam(defaultValue = "false") boolean useCache,
             HttpServletRequest request
     ) {
         log.info("Algorithm '{}' requested for limit {} with {} thread(s)", algorithm, limit, threads);
@@ -96,7 +103,7 @@ public class PrimeController {
             return ResponseEntity.status(400).body(APIResponse.error(error, 400));
         }
 
-        List<Integer> primes = primeService.findPrimes(algorithm.toLowerCase(), limit, threads);
+        List<Integer> primes = primeService.findPrimes(algorithm.toLowerCase(), limit, threads, useCache);
 
         PrimePayload payload = new PrimePayload(
                 algorithm, limit, threads, primes, primes.size(), primeService.getDurationMs()
@@ -118,6 +125,50 @@ public class PrimeController {
     @GetMapping(path = "/api/info", produces = "text/html")
     public String landingPage() {
         return LandingPageBuilder.getHtml();
+    }
+
+
+
+    //----------------Misc-----------------------------------
+
+
+    @Tag(name = "Cache", description = "Endpoints for managing cached prime results")
+    @Operation(
+            summary = "Clear prime cache",
+            description = "Evicts cached prime results from memory. Clears all caches by default, or a specific cache if 'target' is provided.",
+            tags = { "Cache" }
+    )
+    @GetMapping("/api/cache/clear")
+    public ResponseEntity<PrimePayload> clearCache(@RequestParam(required = false) String target) {
+        Set<String> validCaches = Set.of("primes", "basePrimes");
+        List<Integer> clearedCodes = new ArrayList<>();
+
+        if (target == null) {
+            primeService.clearPrimeCache();
+            primeService.clearBasePrimeCache();
+            clearedCodes.addAll(List.of(1, 2)); // 1 = primes, 2 = basePrimes
+            log.info("✅ All caches cleared via PrimeService");
+        } else {
+            switch (target) {
+                case "primes" -> {
+                    primeService.clearPrimeCache();
+                    clearedCodes.add(1);
+                    log.info("✅ Prime cache cleared via PrimeService");
+                }
+                case "basePrimes" -> {
+                    primeService.clearBasePrimeCache();
+                    clearedCodes.add(2);
+                    log.info("✅ Base prime cache cleared via PrimeService");
+                }
+                default -> {
+                    log.warn("❌ Invalid cache target: {}", target);
+                    return ResponseEntity.badRequest().body(new PrimePayload("invalid-cache", 0, 0, List.of(), 0, 0));
+                }
+            }
+        }
+
+        PrimePayload payload = new PrimePayload("cache-cleared", 0, 0, clearedCodes, 0, 0);
+        return ResponseEntity.ok(payload);
     }
 
     //----------------Documentation Controller--------------
@@ -165,8 +216,6 @@ public class PrimeController {
             return ResponseEntity.status(500).body("<h2>Error reading file: " + filename + "</h2>");
         }
     }
-
-
 
 
 

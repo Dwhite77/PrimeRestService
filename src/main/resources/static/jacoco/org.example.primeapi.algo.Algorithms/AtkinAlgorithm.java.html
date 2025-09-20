@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AtkinAlgorithm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PrimeNumberGenerator</a> &gt; <a href="index.source.html" class="el_package">org.example.primeapi.algo.Algorithms</a> &gt; <span class="el_source">AtkinAlgorithm.java</span></div><h1>AtkinAlgorithm.java</h1><pre class="source lang-java linenums">package org.example.primeapi.algo.Algorithms;
+
+import org.example.primeapi.algo.AbstractPrimeAlgorithm;
+import org.example.primeapi.algo.BasePrimeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+
+/**
+ * Implements the Sieve of Atkin algorithm for prime number generation.
+ *
+ * &lt;p&gt;The Sieve of Atkin is an advanced, mathematically optimized algorithm for finding all prime numbers
+ * up to a given limit. Unlike the Sieve of Eratosthenes, which marks off multiples of primes,
+ * Atkin uses modular arithmetic and quadratic forms to identify prime candidates more efficiently.
+ *
+ * &lt;p&gt;This implementation uses a segmented approach:
+ * &lt;ul&gt;
+ *   &lt;li&gt;First, it computes base primes up to √limit using the core Atkin sieve.&lt;/li&gt;
+ *   &lt;li&gt;Then, it applies the segmented sieve across the remaining range using those base primes.&lt;/li&gt;
+ *   &lt;li&gt;Parallel execution is supported via chunked threading for scalability.&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Key mathematical steps:
+ * &lt;ul&gt;
+ *   &lt;li&gt;Marks numbers n where:
+ *     &lt;ul&gt;
+ *       &lt;li&gt;n = 4x² + y² and n mod 12 = 1 or 5 (mod means n/12 remainder = 1 or 5)&lt;/li&gt;
+ *       &lt;li&gt;n = 3x² + y² and n mod 12 = 7&lt;/li&gt;
+ *       &lt;li&gt;n = 3x² − y² and n mod 12 = 11 (when x &gt; y)&lt;/li&gt;
+ *     &lt;/ul&gt;
+ *   &lt;/li&gt;
+ *   &lt;li&gt;Eliminates squares of primes to remove false positives.&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Advantages:
+ * &lt;ul&gt;
+ *   &lt;li&gt;More efficient than Eratosthenes for large ranges.&lt;/li&gt;
+ *   &lt;li&gt;Reduces redundant work by skipping even numbers and using modular filters.&lt;/li&gt;
+ *   &lt;li&gt;Thread-safe and scalable for multi-core execution.&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Limitations:
+ * &lt;ul&gt;
+ *   &lt;li&gt;More complex to implement and debug than simpler sieves.&lt;/li&gt;
+ *   &lt;li&gt;Requires careful handling of modular conditions and segment boundaries.&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Usage:
+ * &lt;pre&gt;{@code
+ * List&lt;Integer&gt; primes = atkinAlgorithm.generate(1_000_000, 4);
+ * }&lt;/pre&gt;
+ *
+ * @author Dan
+ * @see org.example.primeapi.algo.PrimeAlgorithm
+ */
+@Component
+<span class="fc" id="L62">public class AtkinAlgorithm extends AbstractPrimeAlgorithm {</span>
+
+    @Autowired
+    private BasePrimeService basePrimeService;
+
+    @Override
+    public String name() {
+<span class="fc" id="L69">        return &quot;atkin&quot;;</span>
+    }
+
+    @Override
+    public List&lt;Integer&gt; generate(int upperLimit, int threads) {
+
+<span class="fc" id="L75">        int sqrtLimit = (int) Math.sqrt(upperLimit);</span>
+<span class="fc" id="L76">        List&lt;Integer&gt; basePrimes = basePrimeService.generateAtkinBasePrimes(2, sqrtLimit);</span>
+
+<span class="pc bpc" id="L78" title="1 of 4 branches missed.">        if (threads &lt;= 1 || upperLimit &lt;= sqrtLimit + 1) {</span>
+<span class="fc" id="L79">            List&lt;Integer&gt; segmented = findSegmentedChunk(sqrtLimit + 1, upperLimit, basePrimes);</span>
+<span class="fc" id="L80">            List&lt;Integer&gt; allPrimes = new ArrayList&lt;&gt;(basePrimes);</span>
+<span class="fc" id="L81">            allPrimes.addAll(segmented);</span>
+<span class="fc" id="L82">            Collections.sort(allPrimes);</span>
+<span class="fc" id="L83">            return allPrimes;</span>
+        }
+
+<span class="fc" id="L86">        List&lt;Integer&gt; segmentedPrimes = runThreaded(&quot;Segmented Atkin&quot;, sqrtLimit + 1, upperLimit, threads,</span>
+<span class="fc" id="L87">                (start, end) -&gt; findSegmentedChunk(start, end, basePrimes));</span>
+
+<span class="fc" id="L89">        List&lt;Integer&gt; allPrimes = new ArrayList&lt;&gt;(basePrimes);</span>
+<span class="fc" id="L90">        allPrimes.addAll(segmentedPrimes);</span>
+<span class="fc" id="L91">        Collections.sort(allPrimes);</span>
+<span class="fc" id="L92">        return allPrimes;</span>
+    }
+
+
+    public List&lt;Integer&gt; generateBasePrimesForTesting(int start, int end) {
+<span class="fc" id="L97">        return basePrimeService.generateAtkinBasePrimes(start, end);</span>
+    }
+
+
+    private List&lt;Integer&gt; findSegmentedChunk(int lowerBound, int upperBound, List&lt;Integer&gt; basePrimes) {
+<span class="fc" id="L102">        int segmentSize = upperBound - lowerBound + 1;</span>
+<span class="fc" id="L103">        boolean[] isPrimeCandidate = new boolean[segmentSize];</span>
+<span class="fc" id="L104">        int sqrtUpperBound = (int) Math.sqrt(upperBound);</span>
+
+<span class="fc" id="L106">        applyAtkinFiltersToSegment(isPrimeCandidate, lowerBound, upperBound, sqrtUpperBound);</span>
+<span class="fc" id="L107">        eliminateMultiplesOfPrimeSquaresInSegment(isPrimeCandidate, lowerBound, upperBound, basePrimes);</span>
+
+<span class="fc" id="L109">        return collectConfirmedPrimesFromSegment(isPrimeCandidate, lowerBound, upperBound);</span>
+    }
+
+
+
+    /**
+     * Applies Atkin's modular filters to identify prime candidates within the segment.
+     */
+    private void applyAtkinFiltersToSegment(boolean[] isPrimeCandidate, int lowerBound, int upperBound, int sqrtLimit) {
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        for (int x = 1; x &lt;= sqrtLimit; x++) {</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">            for (int y = 1; y &lt;= sqrtLimit; y++) {</span>
+
+<span class="fc" id="L121">                int candidate1 = 4 * x * x + y * y;</span>
+<span class="fc bfc" id="L122" title="All 8 branches covered.">                if (candidate1 &gt;= lowerBound &amp;&amp; candidate1 &lt;= upperBound &amp;&amp; (candidate1 % 12 == 1 || candidate1 % 12 == 5)) {</span>
+<span class="fc" id="L123">                    isPrimeCandidate[candidate1 - lowerBound] ^= true;</span>
+                }
+
+<span class="fc" id="L126">                int candidate2 = 3 * x * x + y * y;</span>
+<span class="fc bfc" id="L127" title="All 6 branches covered.">                if (candidate2 &gt;= lowerBound &amp;&amp; candidate2 &lt;= upperBound &amp;&amp; candidate2 % 12 == 7) {</span>
+<span class="fc" id="L128">                    isPrimeCandidate[candidate2 - lowerBound] ^= true;</span>
+                }
+
+<span class="fc bfc" id="L131" title="All 2 branches covered.">                if (x &gt; y) {</span>
+<span class="fc" id="L132">                    int candidate3 = 3 * x * x - y * y;</span>
+<span class="fc bfc" id="L133" title="All 6 branches covered.">                    if (candidate3 &gt;= lowerBound &amp;&amp; candidate3 &lt;= upperBound &amp;&amp; candidate3 % 12 == 11) {</span>
+<span class="fc" id="L134">                        isPrimeCandidate[candidate3 - lowerBound] ^= true;</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L139">    }</span>
+
+    /**
+     * Removes false positives by marking multiples of prime squares as non-prime within the segment.
+     */
+    private void eliminateMultiplesOfPrimeSquaresInSegment(boolean[] isPrimeCandidate, int lowerBound, int upperBound, List&lt;Integer&gt; basePrimes) {
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        for (int basePrime : basePrimes) {</span>
+<span class="fc" id="L146">            int primeSquared = basePrime * basePrime;</span>
+<span class="fc" id="L147">            int firstMultipleInSegment = ((lowerBound + primeSquared - 1) / primeSquared) * primeSquared;</span>
+
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            for (int multiple = firstMultipleInSegment; multiple &lt;= upperBound; multiple += primeSquared) {</span>
+<span class="fc" id="L150">                isPrimeCandidate[multiple - lowerBound] = false;</span>
+            }
+<span class="fc" id="L152">        }</span>
+<span class="fc" id="L153">    }</span>
+
+    /**
+     * Collects confirmed primes from the segment after filtering.
+     */
+    private List&lt;Integer&gt; collectConfirmedPrimesFromSegment(boolean[] isPrimeCandidate, int lowerBound, int upperBound) {
+<span class="fc" id="L159">        List&lt;Integer&gt; confirmedPrimes = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        for (int offset = 0; offset &lt; isPrimeCandidate.length; offset++) {</span>
+<span class="fc" id="L162">            int candidate = lowerBound + offset;</span>
+<span class="pc bpc" id="L163" title="1 of 4 branches missed.">            if (candidate &gt;= 2 &amp;&amp; isPrimeCandidate[offset]) {</span>
+<span class="fc" id="L164">                confirmedPrimes.add(candidate);</span>
+            }
+        }
+
+<span class="fc" id="L168">        return confirmedPrimes;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

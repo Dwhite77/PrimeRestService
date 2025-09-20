@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.primeapi.algo.PrimeAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,7 +38,11 @@ public class PrimeService {
                 ));
     }
 
-    public List<Integer> findPrimes(String algorithm, int limit, int threads) {
+    @Cacheable(value = "primes",
+            key = "#algorithm + '-' + #limit + '-' + #threads",
+            unless = "!#useCache"
+    )
+    public List<Integer> findPrimes(String algorithm, int limit, int threads, boolean useCache) {
 
         if(limit==2){return List.of(2);}
         if (shouldSkip(algorithm, limit, threads)) return List.of();
@@ -81,6 +87,16 @@ public class PrimeService {
         }
 
         return false;
+    }
+
+    @CacheEvict(value = "primes", allEntries = true)
+    public void clearPrimeCache() {
+        log.info("✅ Prime cache cleared manually");
+    }
+
+    @CacheEvict(value = "basePrimes", allEntries = true)
+    public void clearBasePrimeCache(){
+        log.info("✅ Base Prime cache cleared manually");
     }
 
 
