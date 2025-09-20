@@ -1,6 +1,8 @@
 package org.example.primeapi.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -58,14 +60,7 @@ public class PrimeController {
             @ApiResponse(responseCode = "200", description = "Successful prime generation", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = PrimePayload.class))
             }),
-            @ApiResponse(responseCode = "400", description = """
-        Bad request due to:
-        - Missing required parameters
-        - Invalid parameter types
-        - Unsupported algorithm
-        - Illegal argument
-        - Malformed request body
-        """, content = {
+            @ApiResponse(responseCode = "400", description = "Bad request due to invalid parameters or unsupported algorithm", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
             }),
             @ApiResponse(responseCode = "404", description = "Path not found or missing path variable", content = {
@@ -74,22 +69,26 @@ public class PrimeController {
             @ApiResponse(responseCode = "405", description = "HTTP method not supported for this endpoint", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
             }),
-            @ApiResponse(responseCode = "500", description = """
-        Internal server error due to:
-        - Unhandled exceptions
-        - Runtime failures
-        - ResponseStatusException
-        """, content = {
+            @ApiResponse(responseCode = "500", description = "Internal server error due to unhandled exceptions", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorPayload.class))
             })
     })
     @GetMapping(path="/api/primes", produces = { "application/json", "application/xml" })
     public ResponseEntity<APIResponse> getPrimes(
+            @Parameter(description = "Upper bound for prime generation (must be ≥ 0)", required = true)
             @RequestParam int limit,
+
+            @Parameter(description = "Algorithm to use: trial, sieve, atkin, miller", example = "sieve")
             @RequestParam(defaultValue = "trial") String algorithm,
+
+            @Parameter(description = "Number of threads to use (must be ≥ 1)", example = "4")
             @RequestParam(defaultValue = "1") int threads,
+
+            @Parameter(description = "Whether to use cached results if available", example = "true")
             @RequestParam(defaultValue = "false") boolean useCache,
+
             HttpServletRequest request
+
     ) {
         log.info("Algorithm '{}' requested for limit {} with {} thread(s)", algorithm, limit, threads);
 
@@ -113,10 +112,12 @@ public class PrimeController {
     }
 
 
+    @Hidden
     @GetMapping
-    public RedirectView redirectToInfo(){
+    public RedirectView redirectToInfo() {
         return new RedirectView("/api/info");
     }
+
 
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Returns landing page HTML"),
@@ -138,7 +139,9 @@ public class PrimeController {
             description = "Evicts cached prime results from memory. Clears all caches by default, or a specific cache if 'target' is provided.",
             tags = { "Cache" }
     )
+    @Parameter(name = "target", description = "Optional cache name to clear: 'primes' or 'basePrimes'")
     @GetMapping("/api/cache/clear")
+
     public ResponseEntity<PrimePayload> clearCache(@RequestParam(required = false) String target) {
         Set<String> validCaches = Set.of("primes", "basePrimes");
         List<Integer> clearedCodes = new ArrayList<>();
@@ -196,6 +199,7 @@ public class PrimeController {
             description = "Renders the specified Markdown file as styled HTML with sidebar and backlinks.",
             tags = { "Documentation" }
     )
+    @Parameter(name = "filename", description = "Name of the Markdown file to render")
     @GetMapping("/docs/view/{filename}")
     public ResponseEntity<String> viewMarkdownAsHtml(@PathVariable String filename) {
         if (!HtmlHelper.isValidMarkdownFile(filename)) {
@@ -217,6 +221,17 @@ public class PrimeController {
         }
     }
 
+    @Tag(name = "Documentation", description = "Endpoints for viewing Markdown-based documentation")
+    @Operation(
+            summary = "View recent prime requests as HTML",
+            description = "Returns a styled HTML table of recent prime generation requests.",
+            tags = { "Documentation" }
+    )
+    @GetMapping("/docs/recent-requests-html")
+
+    public ResponseEntity<String> recentRequestsHtml() {
+        return ResponseEntity.ok(HtmlHelper.buildRecentRequestTable());
+    }
 
 
 

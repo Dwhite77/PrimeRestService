@@ -217,6 +217,10 @@ import java.util.Set;
         }
     }
 
+    @GetMapping(&quot;/docs/recent-requests-html&quot;)
+    public ResponseEntity&lt;String&gt; recentRequestsHtml() {
+<span class="nc" id="L222">        return ResponseEntity.ok(HtmlHelper.buildRecentRequestTable());</span>
+    }
 
 
 
@@ -230,7 +234,7 @@ import java.util.Set;
     )
     @GetMapping(&quot;/api/trigger-runtime-exception&quot;)
     public APIResponse triggerException() {
-<span class="fc" id="L233">        throw new RuntimeException(&quot;Boom&quot;);</span>
+<span class="fc" id="L237">        throw new RuntimeException(&quot;Boom&quot;);</span>
     }
     @Tag(name = &quot;Error Simulation&quot;, description = &quot;Endpoints that trigger various exceptions for testing&quot;)
     @Operation(
@@ -240,7 +244,7 @@ import java.util.Set;
     )
     @GetMapping(&quot;/api/trigger-response-status&quot;)
     public void triggerResponseStatus() {
-<span class="fc" id="L243">        throw new ResponseStatusException(HttpStatus.I_AM_A_TEAPOT, &quot;I'm a teapot&quot;);</span>
+<span class="fc" id="L247">        throw new ResponseStatusException(HttpStatus.I_AM_A_TEAPOT, &quot;I'm a teapot&quot;);</span>
     }
     @Tag(name = &quot;Error Simulation&quot;, description = &quot;Endpoints that trigger various exceptions for testing&quot;)
     @Operation(
@@ -250,7 +254,7 @@ import java.util.Set;
     )
     @GetMapping(&quot;/api/trigger-illegal-argument&quot;)
     public void triggerIllegalArgument() {
-<span class="fc" id="L253">        throw new IllegalArgumentException(&quot;Illegal argument&quot;);</span>
+<span class="fc" id="L257">        throw new IllegalArgumentException(&quot;Illegal argument&quot;);</span>
     }
 
 

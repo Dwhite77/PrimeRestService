@@ -15,57 +15,57 @@ public class HtmlHelper {
 
     public static List<String> getMarkdownFiles() {
         try {
-            var uri = HtmlHelper.class.getClassLoader().getResource("docs");
+            var uri = HtmlHelper.class.getClassLoader().getResource("docs").toURI();
             if (uri == null) return List.of();
 
-            File docsDir = new File(uri.toURI());
-            File[] files = docsDir.listFiles((dir, name) -> name.endsWith(".md"));
-            if (files == null) return List.of();
+            if (uri.getScheme().equals("jar")) {
+                // Running from JAR (e.g. Render)
+                var jarPath = HtmlHelper.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+                try (var jarFile = new java.util.jar.JarFile(new File(jarPath))) {
+                    return jarFile.stream()
+                            .map(java.util.jar.JarEntry::getName)
+                            .filter(name -> name.startsWith("docs/") && name.endsWith(".md"))
+                            .map(name -> name.substring("docs/".length()))
+                            .sorted()
+                            .toList();
+                }
+            } else {
+                // Running locally from filesystem
+                File docsDir = new File(uri);
+                File[] files = docsDir.listFiles((dir, name) -> name.endsWith(".md"));
+                if (files == null) return List.of();
 
-            return Arrays.stream(files)
-                    .sorted(Comparator.comparing(File::getName))
-                    .map(File::getName)
-                    .toList();
-
+                return Arrays.stream(files)
+                        .sorted(Comparator.comparing(File::getName))
+                        .map(File::getName)
+                        .toList();
+            }
         } catch (Exception e) {
-            return List.of(); // fallback if running from inside a JAR
+            return List.of(); // fallback
         }
     }
 
-    public static List<String> getMarkdownFilenames() {
-        try {
-            var uri = HtmlHelper.class.getClassLoader().getResource("docs");
-            if (uri == null) return List.of();
-
-            File docsDir = new File(uri.toURI());
-            File[] files = docsDir.listFiles((dir, name) -> name.endsWith(".md"));
-            if (files == null) return List.of();
-
-            return Arrays.stream(files)
-                    .sorted(Comparator.comparing(File::getName))
-                    .map(File::getName)
-                    .toList();
-
-        } catch (Exception e) {
-            return List.of(); // fallback if running from inside a JAR
-        }
-    }
 
     public static String buildSidebar(List<String> filenames) {
         StringBuilder sidebar = new StringBuilder();
 
         sidebar.append("<div class=\"sidebar\">");
-
+        sidebar.append("<h2> Helpful Info </h2>");
         // 📄 Docs section
         sidebar.append("<div class=\"sidebar-section\">");
         sidebar.append("<h3>📄 Docs</h3><ul>");
+
+        // Static Swagger link
+        sidebar.append("<li><a href='/swagger-ui.html' target='_blank'>Swagger UI</a></li>");
+
+
         for (String name : filenames) {
             sidebar.append(String.format("<li><a href=\"/docs/view/%s\">%s</a></li>", name, name));
         }
         sidebar.append("</ul></div>");
 
         // 🧮 Recent requests section
-        sidebar.append("<div class=\"sidebar-section recent-requests\">");
+        sidebar.append("<div class=\"sidebar-section recent-requests\" id=\"recentRequests\">");
         sidebar.append("<h3>🧮 Recent Requests</h3>");
         sidebar.append(buildRecentRequestTable());
         sidebar.append("</div>");
@@ -82,30 +82,54 @@ public class HtmlHelper {
 
     public static String buildRequestForm() {
         return """
+<div class="request-form">
     <form id="primeRequestForm" onsubmit="submitPrimeRequest(event)">
-        <label for="algorithm">Algorithm:</label>
-        <select id="algorithm" name="algorithm">
-            <option value="trial">Trial</option>
-            <option value="sieve">Sieve</option>
-            <option value="miller">Miller</option>
-            <option value="atkin">Atkin</option>
-        </select>
+        <div class="form-box">
+            <label for="algorithm">Algorithm:</label>
+            <select id="algorithm" name="algorithm">
+                <option value="trial">Trial</option>
+                <option value="sieve">Sieve</option>
+                <option value="miller">Miller</option>
+                <option value="atkin">Atkin</option>
+            </select>
+        </div>
 
-        <label for="limit">Limit:</label>
-        <input type="number" id="limit" name="limit" min="1" required>
+        <div class="form-box">
+            <label for="limit">Limit:</label>
+            <input type="number" id="limit" name="limit" value="1000000" required>
+        </div>
 
-        <label for="threads">Threads:</label>
-        <input type="number" id="threads" name="threads" min="1" max="128" required>
+        <div class="form-box">
+            <label for="threads">Threads:</label>
+            <input type="number" id="threads" name="threads" value="4" required>
+        </div>
 
-        <label for="useCache">
+        <div class="form-box">
+          <label class="checkbox-label">
             <input type="checkbox" id="useCache" name="useCache" checked>
             Use Cache
-        </label>
+          </label>
+        </div>
+
+        <div class="form-box">
+          <label class="checkbox-label">
+            <input type="checkbox" id="download" name="download">
+            Download response
+          </label>
+        </div>
+
+        <div class="form-box">
+            <label for="format">Format:</label>
+            <select id="format" name="format">
+                <option value="application/json">JSON</option>
+                <option value="application/xml">XML</option>
+            </select>
+        </div>
 
         <button type="submit">Run</button>
     </form>
-    <div id="requestResult" style="margin-top: 1rem; font-size: 0.9em;"></div>
-    """;
+</div>
+""";
     }
 
     public static String buildIndexContent(List<String> filenames) {
@@ -232,7 +256,6 @@ public class HtmlHelper {
         if (recent.isEmpty()) return "<p>No recent /api/primes requests logged.</p>";
 
         StringBuilder table = new StringBuilder("""
-        <h2>🧮 Recent Prime Requests</h2>
         <table>
             <thead>
                 <tr>
@@ -265,144 +288,276 @@ public class HtmlHelper {
 
 
     private static String styleBlock = """
-                <style>
-                body {
-                    margin: 0;
-                    font-family: sans-serif;
-                    display: flex;
-                }
-                .sidebar {
-                    width: 220px;
-                    max-width: 220px;
-                    background-color: #f4f4f4;
-                    padding: 1rem;
-                    border-right: 1px solid #ddd;
-                    overflow-x: hidden;
-                }
-                .sidebar h3 {
-                    margin-top: 0;
-                }
-                .sidebar ul {
-                    list-style: none;
-                    padding-left: 0;
-                }
-                .sidebar li {
-                    margin: 0.5rem 0;
-                }
-                .sidebar a {
-                    color: #007acc;
-                    text-decoration: none;
-                }
-                .sidebar a:hover {
-                    text-decoration: underline;
-                }
-                .content {
-                    flex: 1;
-                    padding: 2rem;
-                    max-width: 800px;
-                }
-                h1, h2, h3 {
-                    color: #333;
-                }
-                a {
-                    color: #007acc;
-                    text-decoration: none;
-                }
-                a:hover {
-                    text-decoration: underline;
-                }
-                .backlink {
-                    margin-top: 3rem;
-                    font-size: 0.9rem;
-                }
-                .recent-requests {
-                            margin-top: 2rem;
-                            font-size: 0.85em;
-                        }
-                
-                        .recent-requests table {
-                                        width: 100%;
-                                        table-layout: fixed;
-                                        word-wrap: break-word;
-                                        font-size: 0.8em;
+           
+                                <style>
+                                  body {
+                                    background-color: #f9fafb;
+                                    color: #333;
+                                    font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+                                  }
+            
+                                  h1, h2, h3 {
+                                    color: #333;
+                                  }
+            
+                                  a {
+                                    color: #007acc;
+                                    text-decoration: none;
+                                  }
+            
+                                  a:hover {
+                                    text-decoration: underline;
+                                  }
+            
+                                  .sidebar {
+                                    width: 400px;
+                                    max-width: 400px;
+                                    height: 100vh;
+                                    padding: 1rem;
+                                    background-color: #ffffff;
+                                    border-right: 1px solid #e0e0e0;
+                                    box-sizing: border-box;
+                                    position: fixed;
+                                    top: 0;
+                                    left: 0;
+                                    overflow-y: auto;
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                                  }
+            
+                                  .sidebar h3 {
+                                    margin-top: 0;
+                                  }
+            
+                                  .sidebar ul {
+                                    list-style: none;
+                                    padding-left: 0;
+                                  }
+            
+                                  .sidebar li {
+                                    margin: 0.5rem 0;
+                                  }
+            
+                                  .sidebar-section h3 {
+                                    position: static;
+                                    background-color: #fff;
+                                    padding: 0.5rem 0;
+                                  }
+            
+                                  @media (max-width: 768px) {
+                                    .sidebar {
+                                      transform: translateX(-100%);
+                                      transition: transform 0.3s ease;
                                     }
-                
-                        .recent-requests th,
-                                     .recent-requests td {
-                                         padding: 4px;
-                                         text-align: left;
-                                         overflow: hidden;
-                                         text-overflow: ellipsis;
-                                         white-space: nowrap;
-                                     }
-                
-                        .recent-requests tr:hover {
-                            background-color: #f5f5f5;
-                        }
-                        .request-form {
+            
+                                    .sidebar.open {
+                                      transform: translateX(0);
+                                    }
+            
+                                    .sidebar-toggle {
+                                      position: fixed;
+                                      top: 1rem;
+                                      left: 1rem;
+                                      z-index: 1001;
+                                      background: #007acc;
+                                      color: white;
+                                      padding: 0.5rem;
+                                      border-radius: 4px;
+                                      cursor: pointer;
+                                    }
+                                  }
+            
+                                  .content {
+                                    margin-left: 400px;
+                                    padding: 2rem;
+                                    max-width: 1400px;
+                                    box-sizing: border-box;
+                                  }
+            
+                                  .backlink {
+                                    margin-top: 3rem;
+                                    font-size: 0.9rem;
+                                  }
+            
+                                  .recent-requests,
+                                  .request-form {
                                     margin-top: 2rem;
                                     font-size: 0.85em;
-                                }
-                
-                                .request-form label {
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                                  }
+            
+                                  .recent-requests table {
+                                    width: 100%;
+                                    table-layout: fixed;
+                                    word-wrap: break-word;
+                                    font-size: 0.8em;
+                                  }
+            
+                                  .recent-requests th,
+                                  .recent-requests td {
+                                    padding: 4px;
+                                    text-align: left;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    white-space: nowrap;
+                                  }
+            
+                                  .recent-requests tr:hover {
+                                    background-color: #f5f5f5;
+                                  }
+            
+                                  .request-form label {
                                     display: block;
                                     margin-top: 0.5rem;
-                                }
-                
-                                .request-form input,
-                                .request-form select {
+                                  }
+            
+                                  .request-form input,
+                                  .request-form select {
                                     width: 100%;
                                     padding: 4px;
                                     margin-top: 0.2rem;
                                     box-sizing: border-box;
-                                }
-                
-                                .request-form button {
+                                  }
+            
+                                  .request-form button {
                                     margin-top: 0.8rem;
                                     padding: 6px 12px;
                                     background-color: #007acc;
                                     color: white;
                                     border: none;
                                     cursor: pointer;
-                                }
-                
-                                .request-form button:hover {
+                                  }
+            
+                                  .request-form button:hover {
                                     background-color: #005fa3;
-                                }
-            </style>
+                                  }
+            
+                                  .request-form button:active {
+                                    transform: scale(0.98);
+                                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+                                  }
+            
+                                  .form-box {
+                                    width: 100%;
+                                    display: flex;
+                                    flex-direction: column;
+                                    margin-bottom: 1rem;
+                                  }
+            
+                                  .form-box label {
+                                    margin-bottom: 0.3rem;
+                                    font-weight: 500;
+                                  }
+            
+                                  .form-box input,
+                                  .form-box select {
+                                    padding: 6px;
+                                    border: 1px solid #ccc;
+                                    border-radius: 4px;
+                                    box-sizing: border-box;
+                                  }
+            
+                                  .checkbox-label {
+                                    display: block;
+                                    padding-left: 15px;
+                                    text-indent: -15px;
+                                  }
+            
+                                  .checkbox-label input {
+                                    width: 13px;
+                                    height: 13px;
+                                    padding: 0;
+                                    margin: 0;
+                                    vertical-align: bottom;
+                                    position: relative;
+                                    top: -1px;
+                                    *overflow: hidden;
+                                  }
+            
+                                </style>
+                                
 """;
 
     private static String jsBlock = """
             <script>
             function submitPrimeRequest(event) {
-                event.preventDefault();
+                                   event.preventDefault();
             
-                const algo = document.getElementById("algorithm").value;
-                const limit = parseInt(document.getElementById("limit").value, 10);
-                const threads = parseInt(document.getElementById("threads").value, 10);
-                const useCache = document.getElementById("useCache").checked;
+                                   const algo = document.getElementById("algorithm").value;
+                                   const limit = parseInt(document.getElementById("limit").value, 10);
+                                   const threads = parseInt(document.getElementById("threads").value, 10);
+                                   const useCache = document.getElementById("useCache").checked;
+                                   const format = document.getElementById("format").value;
+                                   const download = document.getElementById("download").checked;
             
-                if (isNaN(limit) || limit < 1) {
-                    alert("Limit must be a positive integer.");
-                    return;
-                }
+                                   if (isNaN(limit) || limit < 1) {
+                                     alert("Limit must be a positive integer.");
+                                     return;
+                                   }
             
-                if (isNaN(threads) || threads < 1 || threads > 128) {
-                    alert("Threads must be between 1 and 128.");
-                    return;
-                }
+                                   if (isNaN(threads) || threads < 1 || threads > 128) {
+                                     alert("Threads must be between 1 and 128.");
+                                     return;
+                                   }
             
-                const url = `/api/primes?algorithm=${algo}&limit=${limit}&threads=${threads}&useCache=${useCache}`;
-                fetch(url)
-                    .then(res => res.json())
-                    .then(data => {
-                        const resultDiv = document.getElementById("requestResult");
-                        resultDiv.innerHTML = `<strong>Result:</strong> ${data.total} primes in ${data.durationMs}ms`;
-                    })
-                    .catch(err => {
-                        document.getElementById("requestResult").innerHTML = `<span style="color:red;">Error: ${err}</span>`;
+                                   const url = `/api/primes?algorithm=${algo}&limit=${limit}&threads=${threads}&useCache=${useCache}`;
+            
+                                   fetch(url, { headers: { "Accept": format } })
+                                     .then(res => download ? res.blob() : res.text())
+                                     .then(data => {
+                                       if (download) {
+                                         const ext = format.includes("json") ? "json" : "xml";
+                                         const fileUrl = URL.createObjectURL(data);
+                                         const a = document.createElement("a");
+                                         a.href = fileUrl;
+                                         a.download = `primes.${ext}`;
+                                         a.click();
+                                         URL.revokeObjectURL(fileUrl);
+            
+                                         // Also open in new tab with parsed content
+                                         const reader = new FileReader();
+                                         reader.onload = function () {
+                                           const blob = new Blob([reader.result], { type: format });
+                                           const tabUrl = URL.createObjectURL(blob);
+                                           window.open(tabUrl, "_blank");
+                                         };
+                                         reader.readAsText(data);
+                                       } else {
+                                         refreshRecentRequests();
+            
+                                         // Open parsed content in new tab
+                                         const blob = new Blob([data], { type: format });
+                                         const tabUrl = URL.createObjectURL(blob);
+                                         window.open(tabUrl, "_blank");
+                                       }
+                                     });
+                                 }
+            
+                                 function escapeHtml(str) {
+                                   return str.replace(/[&<>"']/g, m => ({
+                                     '&': '&amp;',
+                                     '<': '&lt;',
+                                     '>': '&gt;',
+                                     '"': '&quot;',
+                                     "'": '&#39;'
+                                   })[m]);
+                                 }
+            
+            function refreshRecentRequests() {
+                fetch("/docs/recent-requests-html")
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById("recentRequests").innerHTML = html;
                     });
             }
+            
+            function escapeHtml(str) {
+                return str.replace(/&/g, "&amp;")
+                          .replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+            }
+            
             </script>
             """;
 

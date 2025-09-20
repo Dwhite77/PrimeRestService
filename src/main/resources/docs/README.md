@@ -112,6 +112,7 @@ Coverage is tracked via JaCoCo:
 
 ## Technologies Used
 
+- Maven
 - Java 17+
 - Spring Boot
 - JUnit 5
@@ -119,7 +120,10 @@ Coverage is tracked via JaCoCo:
 - Swagger/OpenAPI
 - Markdown + HTML rendering
 - JaCoCo
-- ConcurrentMapCacheManager
+- Jackson Databind
+- Docker
+- Render
+- Lombok
 
 ---
 
