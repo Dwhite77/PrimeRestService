@@ -1,6 +1,9 @@
 package org.example.primeapi.algo.Algorithms;
 
 import org.example.primeapi.algo.AbstractPrimeAlgorithm;
+import org.example.primeapi.algo.BasePrimeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -62,6 +65,11 @@ import java.util.*;
 @Component
 public class SieveAlgorithm extends AbstractPrimeAlgorithm {
 
+
+    @Autowired
+    private BasePrimeService basePrimeService;
+
+
     @Override
     public String name() {
         return "sieve";
@@ -69,15 +77,15 @@ public class SieveAlgorithm extends AbstractPrimeAlgorithm {
 
     @Override
     public List<Integer> generate(int upperLimit, int threads) {
-
         int sqrtLimit = (int) Math.sqrt(upperLimit);
-        List<Integer> basePrimes = generateBasePrimes(sqrtLimit);
+        List<Integer> basePrimes = basePrimeService.generateSieveBasePrimes(sqrtLimit);
 
         if (upperLimit <= sqrtLimit) return basePrimes;
 
         List<Integer> segmentedPrimes = (threads <= 1)
-                ? segmentedChunk(sqrtLimit + 1, upperLimit, basePrimes) // if threads is smaller than 1 true
-                : runThreaded("Sieve", sqrtLimit + 1, upperLimit, threads, (start, end) -> segmentedChunk(start, end, basePrimes)); // if false
+                ? sieveSegment(sqrtLimit + 1, upperLimit, basePrimes)
+                : runThreaded("Sieve", sqrtLimit + 1, upperLimit, threads,
+                (segmentStart, segmentEnd) -> sieveSegment(segmentStart, segmentEnd, basePrimes));
 
         List<Integer> allPrimes = new ArrayList<>(basePrimes);
         allPrimes.addAll(segmentedPrimes);
@@ -85,43 +93,37 @@ public class SieveAlgorithm extends AbstractPrimeAlgorithm {
         return allPrimes;
     }
 
-    private List<Integer> generateBasePrimes(int limit) {
-        boolean[] isPrime = new boolean[limit + 1];
-        Arrays.fill(isPrime, true);
 
-        for (int p = 2; p * p <= limit; p++) {
-            if (!isPrime[p]) continue;
-            for (int i = p * p; i <= limit; i += p) {
-                isPrime[i] = false;
-            }
-        }
 
-        List<Integer> primes = new ArrayList<>();
-        for (int i = 2; i <= limit; i++) {
-            if (isPrime[i]) primes.add(i);
-        }
-
-        return primes;
+    public List<Integer> generateBasePrimesForTesting(int limit) {
+        return basePrimeService.generateSieveBasePrimes(limit);
     }
 
-    private List<Integer> segmentedChunk(int start, int end, List<Integer> basePrimes) {
-        if (start < 2) start = 2;
-        boolean[] isPrime = new boolean[end - start + 1];
-        Arrays.fill(isPrime, true);
 
-        for (int prime : basePrimes) {
-            int firstMultiple = Math.max(prime * prime, ((start + prime - 1) / prime) * prime);
-            for (int i = firstMultiple; i <= end; i += prime) {
-                isPrime[i - start] = false;
+    /**
+     * Applies segmented sieve logic to eliminate composites in the range [segmentStart, segmentEnd].
+     */
+    private List<Integer> sieveSegment(int segmentStart, int segmentEnd, List<Integer> basePrimes) {
+        int segmentSize = segmentEnd - segmentStart + 1;
+        boolean[] isPrimeCandidate = new boolean[segmentSize];
+        Arrays.fill(isPrimeCandidate, true);
+
+        for (int basePrime : basePrimes) {
+            int primeSquared = basePrime * basePrime;
+            int firstMultipleInSegment = Math.max(primeSquared,
+                    ((segmentStart + basePrime - 1) / basePrime) * basePrime);
+
+            for (int multiple = firstMultipleInSegment; multiple <= segmentEnd; multiple += basePrime) {
+                isPrimeCandidate[multiple - segmentStart] = false;
             }
         }
 
-        List<Integer> primes = new ArrayList<>();
-        for (int i = 0; i < isPrime.length; i++) {
-            int candidate = start + i;
-            if (isPrime[i]) primes.add(candidate);
+        List<Integer> confirmedPrimes = new ArrayList<>();
+        for (int offset = 0; offset < segmentSize; offset++) {
+            int candidate = segmentStart + offset;
+            if (isPrimeCandidate[offset]) confirmedPrimes.add(candidate);
         }
 
-        return primes;
+        return confirmedPrimes;
     }
 }

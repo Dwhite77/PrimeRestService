@@ -3,16 +3,15 @@ package org.example.primeapi.algo;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-@SpringBootTest
 @Slf4j
+@ActiveProfiles("test")
 public abstract class PrimeAlgorithmTestSupport {
-
-
     protected abstract PrimeAlgorithm getAlgorithm();
 
     @Test
@@ -27,13 +26,6 @@ public abstract class PrimeAlgorithmTestSupport {
         List<Integer> primes = getAlgorithm().generate(1, 1);
         assertTrue(primes.isEmpty());
     }
-
-    //THis is no longer handled at this level so will not pass
-    /*@Test
-    void handlesThreadCountGreaterThanLimit() {
-        List<Integer> primes = getAlgorithm().generate(10, 20);
-        assertTrue(primes.isEmpty());
-    }*/
 
     @Test
     void returnsSortedDistinctPrimes() {

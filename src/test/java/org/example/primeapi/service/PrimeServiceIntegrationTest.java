@@ -63,7 +63,7 @@ public class PrimeServiceIntegrationTest {
                     log.info("-------------Test Start---------------");
                     log.info("Testing '{}' with upper limit = {} and threads = {}", algoName, limit, thread);
 
-                    List<Integer> result = service.findPrimes(algoName, limit, thread);
+                    List<Integer> result = service.findPrimes(algoName, limit, thread, false);
 
                     log.info("Completed '{}' in {} ms", algoName, service.getDurationMs());
                     log.info("Last 5 primes from '{}': {}", algoName,
@@ -105,7 +105,7 @@ public class PrimeServiceIntegrationTest {
         List<Integer> expectedPrimes = List.of(2, 3, 5, 7, 11, 13, 17, 19, 23, 29);
         algorithmNames.forEach(algoName -> {
             log.info("Testing algorithm '{}'", algoName);
-            List<Integer> result = service.findPrimes(algoName, 30, 1);
+            List<Integer> result = service.findPrimes(algoName, 30, 1, false);
             log.info("Output from '{}': {}", algoName, result);
             assertEquals(expectedPrimes, result, "Mismatch in output for algorithm: " + algoName);
 
@@ -117,7 +117,7 @@ public class PrimeServiceIntegrationTest {
     void allAlgorithmsGenerateExpectedPrimesUpTo1000UsingMultiThreading() {
         algorithmNames.forEach(algoName -> {
             log.info("Testing algorithm '{}'", algoName);
-            List<Integer> primes = service.findPrimes(algoName, 1000, 4);
+            List<Integer> primes = service.findPrimes(algoName, 1000, 4, false);
             log.info("Output from '{}': {} primes, sample: {}", algoName, primes.size(), primes.subList(0, Math.min(10, primes.size()))+"...");
             log.info("Last Prime gotten: {}", primes.get(primes.size()-1));
             assertEquals(primes.get(primes.size()-1),997, "Mismatch in final prime");
@@ -129,7 +129,7 @@ public class PrimeServiceIntegrationTest {
     void allAlgorithmsReturnEmptyForLimit0() {
         algorithmNames.forEach(algoName -> {
             log.info("Testing algorithm '{}' with limit=0", algoName);
-            List<Integer> result = service.findPrimes(algoName, 0, 1);
+            List<Integer> result = service.findPrimes(algoName, 0, 1, false);
             log.info("Result: {}", result);
             assertTrue(result.isEmpty(), "Expected empty result for '" + algoName + "' with limit=0");
         });
@@ -139,7 +139,7 @@ public class PrimeServiceIntegrationTest {
     void allAlgorithmsReturn1ForLimit1() {
         algorithmNames.forEach(algoName -> {
             log.info("Testing algorithm '{}' with limit=1", algoName);
-            List<Integer> result = service.findPrimes(algoName, 1, 1);
+            List<Integer> result = service.findPrimes(algoName, 1, 1, false);
             log.info("Result: {}", result);
             assertTrue(result.equals(List.of()), "Expected result for '" + algoName + "' with limit=1 is 1");
         });
@@ -149,7 +149,7 @@ public class PrimeServiceIntegrationTest {
     void allAlgorithmsReturn2ForLimit2() {
         algorithmNames.forEach(algoName -> {
             log.info("Testing algorithm '{}' with limit=2", algoName);
-            List<Integer> result = service.findPrimes(algoName, 2, 1);
+            List<Integer> result = service.findPrimes(algoName, 2, 1, false);
             log.info("Result: {}", result);
             assertTrue(result.equals(List.of(2)), "Expected 2 result for '" + algoName + "' with limit=2");
         });
@@ -162,7 +162,7 @@ public class PrimeServiceIntegrationTest {
         primeLimits.forEach(limit -> {
             algorithmNames.forEach(algoName -> {
                 log.info("Testing upper bound inclusion for '{}', limit={}", algoName, limit);
-                List<Integer> result = service.findPrimes(algoName, limit, 2);
+                List<Integer> result = service.findPrimes(algoName, limit, 2, false);
                 log.debug("Output from '{}': {}", algoName, result);
                 assertTrue(result.contains(limit), "Algorithm '" + algoName + "' failed to include prime upper bound: " + limit);
             });
@@ -179,7 +179,7 @@ public class PrimeServiceIntegrationTest {
         nonPrimeLimits.forEach(limit -> {
             algorithmNames.forEach(algoName -> {
                 log.info("Testing upper bound exclusion for '{}', limit={}", algoName, limit);
-                List<Integer> result = service.findPrimes(algoName, limit, 2);
+                List<Integer> result = service.findPrimes(algoName, limit, 2, false);
                 log.debug("Output from '{}': {}", algoName, result);
                 assertFalse(result.contains(limit), "Algorithm '" + algoName + "' incorrectly included non-prime upper bound: " + limit);
             });
@@ -200,7 +200,7 @@ public class PrimeServiceIntegrationTest {
                 log.info("Testing '{}' with upper limit = {} and threads = {}", algoName, limit, threads);
 
 
-                List<Integer> result = service.findPrimes(algoName, limit, threads);
+                List<Integer> result = service.findPrimes(algoName, limit, threads, false);
 
 
                 log.info("Completed '{}' in {} ms", algoName, service.getDurationMs());
@@ -225,7 +225,7 @@ public class PrimeServiceIntegrationTest {
                 log.info("-------------Test Start---------------");
                 log.info("Testing '{}' with upper limit = {} and threads = {}", algoName, limit, threads);
 
-                List<Integer> result = service.findPrimes(algoName, limit, threads);
+                List<Integer> result = service.findPrimes(algoName, limit, threads, false);
 
                 log.info("Completed '{}' in {} ms", algoName, service.getDurationMs());
                 log.info("Last 5 primes from '{}': {}", algoName,
@@ -251,7 +251,7 @@ public class PrimeServiceIntegrationTest {
                 log.info("-------------Test Start---------------");
                 log.info("Testing '{}' with upper limit = {} and threads = {}", algoName, limit, threads);
 
-                List<Integer> result = service.findPrimes(algoName, limit, threads);
+                List<Integer> result = service.findPrimes(algoName, limit, threads, false);
 
                 log.info("Completed '{}' in {} ms", algoName, service.getDurationMs());
                 log.info("Last 5 primes from '{}': {}", algoName,
