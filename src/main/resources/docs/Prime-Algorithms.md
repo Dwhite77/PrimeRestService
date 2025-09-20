@@ -25,22 +25,46 @@ These endpoints return prime numbers using different algorithms and thread count
 ```
 ---
 
+## 📊 Example Requests
+
+### Render Deployed
+
+- [Run sieve benchmark with 4 threads](https://primerestservice.onrender.com/api/primes?algorithm=sieve&limit=100000&threads=4)
+- [Run atkin benchmark with 2 threads](https://primerestservice.onrender.com/api/primes?algorithm=atkin&limit=50000&threads=2)
+- [Run trial benchmark with 1 thread](https://primerestservice.onrender.com/api/primes?algorithm=trial&limit=10000&threads=1)
+- [Run miller benchmark with 8 threads](https://primerestservice.onrender.com/api/primes?algorithm=miller&limit=250000&threads=8)
+- [Run sieve benchmark with cache disabled](https://primerestservice.onrender.com/api/primes?algorithm=sieve&limit=50000&threads=2&useCache=false)
+- [Run atkin benchmark with XML response format](https://primerestservice.onrender.com/api/primes?algorithm=atkin&limit=20000&threads=1)
+- [Run trial benchmark with cache enabled](https://primerestservice.onrender.com/api/primes?algorithm=trial&limit=15000&threads=2&useCache=true)
+- [Run sieve benchmark with high thread count](https://primerestservice.onrender.com/api/primes?algorithm=sieve&limit=1000000&threads=16)
+- [Run miller benchmark with small limit and JSON response](https://primerestservice.onrender.com/api/primes?algorithm=miller&limit=100&threads=1)
+- [Run atkin benchmark with large limit](https://primerestservice.onrender.com/api/primes?algorithm=atkin&limit=75000&threads=4)
+
+### Local host
+
+- [Run sieve benchmark with 4 threads](http://localhost:8080/api/primes?algorithm=sieve&limit=100000&threads=4)
+- [Run atkin benchmark with 2 threads](http://localhost:8080/api/primes?algorithm=atkin&limit=50000&threads=2)
+- [Run trial benchmark with 1 thread](http://localhost:8080/api/primes?algorithm=trial&limit=10000&threads=1)
+- [Run miller benchmark with 8 threads](http://localhost:8080/api/primes?algorithm=miller&limit=250000&threads=8)
+- [Run sieve benchmark with cache disabled](http://localhost:8080/api/primes?algorithm=sieve&limit=50000&threads=2&useCache=false)
+- [Run atkin benchmark with XML response format](http://localhost:8080/api/primes?algorithm=atkin&limit=20000&threads=1)
+- [Run trial benchmark with cache enabled](http://localhost:8080/api/primes?algorithm=trial&limit=15000&threads=2&useCache=true)
+- [Run sieve benchmark with high thread count](http://localhost:8080/api/primes?algorithm=sieve&limit=1000000&threads=16)
+- [Run miller benchmark with small limit and JSON response](http://localhost:8080/api/primes?algorithm=miller&limit=100&threads=1)
+- [Run atkin benchmark with large limit](http://localhost:8080/api/primes?algorithm=atkin&limit=75000&threads=4)
+
+
+
 ---
 
 ## 🧭 Landing Page
-```
-| Description                    | Example URL                      |
-|--------------------------------|----------------------------------|
-| View the raw HTML landing page | `http://localhost:8080/api/info` |
-```
 
-## 📊 Benchmark Dashboard Examples
 
-- [View dashboard](http://localhost:8080/dashboard)
-- [Run sieve benchmark with 4 threads](http://localhost:8080/api/primes?algorithm=sieve&limit=100000&threads=4)
-- [Run atkin benchmark with custom tag](http://localhost:8080/api/primes?algorithm=atkin&limit=50000&threads=2&tag=atkin-fast)
-- [Run trial benchmark with 1 thread](http://localhost:8080/api/primes?algorithm=trial&limit=10000&threads=1)
+[View the raw HTML landing page](http://localhost:8080/api/info)
 
-Each algorithm is accessible via the API and can be benchmarked independently. For implementation details, refer to the linked documentation files.
+[View the raw HTML landing page on Render](https://primerestservice.onrender.com/api/info)
+
+
+
 
 ---

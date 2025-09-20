@@ -15,146 +15,166 @@ import java.util.List;
 
     public static List&lt;String&gt; getMarkdownFiles() {
         try {
-<span class="nc" id="L18">            var uri = HtmlHelper.class.getClassLoader().getResource(&quot;docs&quot;);</span>
+<span class="nc" id="L18">            var uri = HtmlHelper.class.getClassLoader().getResource(&quot;docs&quot;).toURI();</span>
 <span class="nc bnc" id="L19" title="All 2 branches missed.">            if (uri == null) return List.of();</span>
 
-<span class="nc" id="L21">            File docsDir = new File(uri.toURI());</span>
-<span class="nc" id="L22">            File[] files = docsDir.listFiles((dir, name) -&gt; name.endsWith(&quot;.md&quot;));</span>
-<span class="nc bnc" id="L23" title="All 2 branches missed.">            if (files == null) return List.of();</span>
+<span class="nc bnc" id="L21" title="All 2 branches missed.">            if (uri.getScheme().equals(&quot;jar&quot;)) {</span>
+                // Running from JAR (e.g. Render)
+<span class="nc" id="L23">                var jarPath = HtmlHelper.class.getProtectionDomain().getCodeSource().getLocation().toURI();</span>
+<span class="nc" id="L24">                try (var jarFile = new java.util.jar.JarFile(new File(jarPath))) {</span>
+<span class="nc" id="L25">                    return jarFile.stream()</span>
+<span class="nc" id="L26">                            .map(java.util.jar.JarEntry::getName)</span>
+<span class="nc bnc" id="L27" title="All 4 branches missed.">                            .filter(name -&gt; name.startsWith(&quot;docs/&quot;) &amp;&amp; name.endsWith(&quot;.md&quot;))</span>
+<span class="nc" id="L28">                            .map(name -&gt; name.substring(&quot;docs/&quot;.length()))</span>
+<span class="nc" id="L29">                            .sorted()</span>
+<span class="nc" id="L30">                            .toList();</span>
+                }
+            } else {
+                // Running locally from filesystem
+<span class="nc" id="L34">                File docsDir = new File(uri);</span>
+<span class="nc" id="L35">                File[] files = docsDir.listFiles((dir, name) -&gt; name.endsWith(&quot;.md&quot;));</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">                if (files == null) return List.of();</span>
 
-<span class="nc" id="L25">            return Arrays.stream(files)</span>
-<span class="nc" id="L26">                    .sorted(Comparator.comparing(File::getName))</span>
-<span class="nc" id="L27">                    .map(File::getName)</span>
-<span class="nc" id="L28">                    .toList();</span>
-
-<span class="nc" id="L30">        } catch (Exception e) {</span>
-<span class="nc" id="L31">            return List.of(); // fallback if running from inside a JAR</span>
+<span class="nc" id="L38">                return Arrays.stream(files)</span>
+<span class="nc" id="L39">                        .sorted(Comparator.comparing(File::getName))</span>
+<span class="nc" id="L40">                        .map(File::getName)</span>
+<span class="nc" id="L41">                        .toList();</span>
+            }
+<span class="nc" id="L43">        } catch (Exception e) {</span>
+<span class="nc" id="L44">            return List.of(); // fallback</span>
         }
     }
 
-    public static List&lt;String&gt; getMarkdownFilenames() {
-        try {
-<span class="nc" id="L37">            var uri = HtmlHelper.class.getClassLoader().getResource(&quot;docs&quot;);</span>
-<span class="nc bnc" id="L38" title="All 2 branches missed.">            if (uri == null) return List.of();</span>
-
-<span class="nc" id="L40">            File docsDir = new File(uri.toURI());</span>
-<span class="nc" id="L41">            File[] files = docsDir.listFiles((dir, name) -&gt; name.endsWith(&quot;.md&quot;));</span>
-<span class="nc bnc" id="L42" title="All 2 branches missed.">            if (files == null) return List.of();</span>
-
-<span class="nc" id="L44">            return Arrays.stream(files)</span>
-<span class="nc" id="L45">                    .sorted(Comparator.comparing(File::getName))</span>
-<span class="nc" id="L46">                    .map(File::getName)</span>
-<span class="nc" id="L47">                    .toList();</span>
-
-<span class="nc" id="L49">        } catch (Exception e) {</span>
-<span class="nc" id="L50">            return List.of(); // fallback if running from inside a JAR</span>
-        }
-    }
 
     public static String buildSidebar(List&lt;String&gt; filenames) {
-<span class="nc" id="L55">        StringBuilder sidebar = new StringBuilder();</span>
+<span class="nc" id="L50">        StringBuilder sidebar = new StringBuilder();</span>
 
-<span class="nc" id="L57">        sidebar.append(&quot;&lt;div class=\&quot;sidebar\&quot;&gt;&quot;);</span>
-
+<span class="nc" id="L52">        sidebar.append(&quot;&lt;div class=\&quot;sidebar\&quot;&gt;&quot;);</span>
+<span class="nc" id="L53">        sidebar.append(&quot;&lt;h2&gt; Helpful Info &lt;/h2&gt;&quot;);</span>
         // 📄 Docs section
-<span class="nc" id="L60">        sidebar.append(&quot;&lt;div class=\&quot;sidebar-section\&quot;&gt;&quot;);</span>
-<span class="nc" id="L61">        sidebar.append(&quot;&lt;h3&gt;📄 Docs&lt;/h3&gt;&lt;ul&gt;&quot;);</span>
-<span class="nc bnc" id="L62" title="All 2 branches missed.">        for (String name : filenames) {</span>
-<span class="nc" id="L63">            sidebar.append(String.format(&quot;&lt;li&gt;&lt;a href=\&quot;/docs/view/%s\&quot;&gt;%s&lt;/a&gt;&lt;/li&gt;&quot;, name, name));</span>
-<span class="nc" id="L64">        }</span>
-<span class="nc" id="L65">        sidebar.append(&quot;&lt;/ul&gt;&lt;/div&gt;&quot;);</span>
+<span class="nc" id="L55">        sidebar.append(&quot;&lt;div class=\&quot;sidebar-section\&quot;&gt;&quot;);</span>
+<span class="nc" id="L56">        sidebar.append(&quot;&lt;h3&gt;📄 Docs&lt;/h3&gt;&lt;ul&gt;&quot;);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        for (String name : filenames) {</span>
+<span class="nc" id="L58">            sidebar.append(String.format(&quot;&lt;li&gt;&lt;a href=\&quot;/docs/view/%s\&quot;&gt;%s&lt;/a&gt;&lt;/li&gt;&quot;, name, name));</span>
+<span class="nc" id="L59">        }</span>
+<span class="nc" id="L60">        sidebar.append(&quot;&lt;/ul&gt;&lt;/div&gt;&quot;);</span>
 
         // 🧮 Recent requests section
-<span class="nc" id="L68">        sidebar.append(&quot;&lt;div class=\&quot;sidebar-section recent-requests\&quot;&gt;&quot;);</span>
-<span class="nc" id="L69">        sidebar.append(&quot;&lt;h3&gt;🧮 Recent Requests&lt;/h3&gt;&quot;);</span>
-<span class="nc" id="L70">        sidebar.append(buildRecentRequestTable());</span>
-<span class="nc" id="L71">        sidebar.append(&quot;&lt;/div&gt;&quot;);</span>
+<span class="nc" id="L63">        sidebar.append(&quot;&lt;div class=\&quot;sidebar-section recent-requests\&quot; id=\&quot;recentRequests\&quot;&gt;&quot;);</span>
+<span class="nc" id="L64">        sidebar.append(&quot;&lt;h3&gt;🧮 Recent Requests&lt;/h3&gt;&quot;);</span>
+<span class="nc" id="L65">        sidebar.append(buildRecentRequestTable());</span>
+<span class="nc" id="L66">        sidebar.append(&quot;&lt;/div&gt;&quot;);</span>
 
         // ⚙️ Prime request form section
-<span class="nc" id="L74">        sidebar.append(&quot;&lt;div class=\&quot;sidebar-section request-form\&quot;&gt;&quot;);</span>
-<span class="nc" id="L75">        sidebar.append(&quot;&lt;h3&gt;⚙️ Run Prime Request&lt;/h3&gt;&quot;);</span>
-<span class="nc" id="L76">        sidebar.append(buildRequestForm());</span>
-<span class="nc" id="L77">        sidebar.append(&quot;&lt;/div&gt;&quot;);</span>
+<span class="nc" id="L69">        sidebar.append(&quot;&lt;div class=\&quot;sidebar-section request-form\&quot;&gt;&quot;);</span>
+<span class="nc" id="L70">        sidebar.append(&quot;&lt;h3&gt;⚙️ Run Prime Request&lt;/h3&gt;&quot;);</span>
+<span class="nc" id="L71">        sidebar.append(buildRequestForm());</span>
+<span class="nc" id="L72">        sidebar.append(&quot;&lt;/div&gt;&quot;);</span>
 
-<span class="nc" id="L79">        sidebar.append(&quot;&lt;/div&gt;&quot;);</span>
-<span class="nc" id="L80">        return sidebar.toString();</span>
+<span class="nc" id="L74">        sidebar.append(&quot;&lt;/div&gt;&quot;);</span>
+<span class="nc" id="L75">        return sidebar.toString();</span>
     }
 
     public static String buildRequestForm() {
-<span class="nc" id="L84">        return &quot;&quot;&quot;</span>
+<span class="nc" id="L79">        return &quot;&quot;&quot;</span>
+&lt;div class=&quot;request-form&quot;&gt;
     &lt;form id=&quot;primeRequestForm&quot; onsubmit=&quot;submitPrimeRequest(event)&quot;&gt;
-        &lt;label for=&quot;algorithm&quot;&gt;Algorithm:&lt;/label&gt;
-        &lt;select id=&quot;algorithm&quot; name=&quot;algorithm&quot;&gt;
-            &lt;option value=&quot;trial&quot;&gt;Trial&lt;/option&gt;
-            &lt;option value=&quot;sieve&quot;&gt;Sieve&lt;/option&gt;
-            &lt;option value=&quot;miller&quot;&gt;Miller&lt;/option&gt;
-            &lt;option value=&quot;atkin&quot;&gt;Atkin&lt;/option&gt;
-        &lt;/select&gt;
+        &lt;div class=&quot;form-box&quot;&gt;
+            &lt;label for=&quot;algorithm&quot;&gt;Algorithm:&lt;/label&gt;
+            &lt;select id=&quot;algorithm&quot; name=&quot;algorithm&quot;&gt;
+                &lt;option value=&quot;trial&quot;&gt;Trial&lt;/option&gt;
+                &lt;option value=&quot;sieve&quot;&gt;Sieve&lt;/option&gt;
+                &lt;option value=&quot;miller&quot;&gt;Miller&lt;/option&gt;
+                &lt;option value=&quot;atkin&quot;&gt;Atkin&lt;/option&gt;
+            &lt;/select&gt;
+        &lt;/div&gt;
 
-        &lt;label for=&quot;limit&quot;&gt;Limit:&lt;/label&gt;
-        &lt;input type=&quot;number&quot; id=&quot;limit&quot; name=&quot;limit&quot; min=&quot;1&quot; required&gt;
+        &lt;div class=&quot;form-box&quot;&gt;
+            &lt;label for=&quot;limit&quot;&gt;Limit:&lt;/label&gt;
+            &lt;input type=&quot;number&quot; id=&quot;limit&quot; name=&quot;limit&quot; value=&quot;1000000&quot; required&gt;
+        &lt;/div&gt;
 
-        &lt;label for=&quot;threads&quot;&gt;Threads:&lt;/label&gt;
-        &lt;input type=&quot;number&quot; id=&quot;threads&quot; name=&quot;threads&quot; min=&quot;1&quot; max=&quot;128&quot; required&gt;
+        &lt;div class=&quot;form-box&quot;&gt;
+            &lt;label for=&quot;threads&quot;&gt;Threads:&lt;/label&gt;
+            &lt;input type=&quot;number&quot; id=&quot;threads&quot; name=&quot;threads&quot; value=&quot;4&quot; required&gt;
+        &lt;/div&gt;
 
-        &lt;label for=&quot;useCache&quot;&gt;
+        &lt;div class=&quot;form-box&quot;&gt;
+          &lt;label class=&quot;checkbox-label&quot;&gt;
             &lt;input type=&quot;checkbox&quot; id=&quot;useCache&quot; name=&quot;useCache&quot; checked&gt;
             Use Cache
-        &lt;/label&gt;
+          &lt;/label&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;form-box&quot;&gt;
+          &lt;label class=&quot;checkbox-label&quot;&gt;
+            &lt;input type=&quot;checkbox&quot; id=&quot;download&quot; name=&quot;download&quot;&gt;
+            Download response
+          &lt;/label&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;form-box&quot;&gt;
+            &lt;label for=&quot;format&quot;&gt;Format:&lt;/label&gt;
+            &lt;select id=&quot;format&quot; name=&quot;format&quot;&gt;
+                &lt;option value=&quot;application/json&quot;&gt;JSON&lt;/option&gt;
+                &lt;option value=&quot;application/xml&quot;&gt;XML&lt;/option&gt;
+            &lt;/select&gt;
+        &lt;/div&gt;
 
         &lt;button type=&quot;submit&quot;&gt;Run&lt;/button&gt;
     &lt;/form&gt;
     &lt;div id=&quot;requestResult&quot; style=&quot;margin-top: 1rem; font-size: 0.9em;&quot;&gt;&lt;/div&gt;
-    &quot;&quot;&quot;;
+&lt;/div&gt;
+&quot;&quot;&quot;;
     }
 
     public static String buildIndexContent(List&lt;String&gt; filenames) {
-<span class="nc" id="L112">        List&lt;String&gt; algorithmDocs = List.of(</span>
+<span class="nc" id="L132">        List&lt;String&gt; algorithmDocs = List.of(</span>
                 &quot;Trial.md&quot;, &quot;Sieve.md&quot;, &quot;Atkin.md&quot;, &quot;Miller.md&quot;
         );
 
-<span class="nc" id="L116">        List&lt;String&gt; infoDocs = List.of(</span>
+<span class="nc" id="L136">        List&lt;String&gt; infoDocs = List.of(</span>
                  &quot;Error-Handling.md&quot;, &quot;Testing.md&quot;, &quot;RestApis.md&quot;, &quot;Performance.md&quot;
         );
 
-<span class="nc" id="L120">        StringBuilder content = new StringBuilder(&quot;&lt;h1&gt;📚 Documentation Index&lt;/h1&gt;&quot;);</span>
+<span class="nc" id="L140">        StringBuilder content = new StringBuilder(&quot;&lt;h1&gt;📚 Documentation Index&lt;/h1&gt;&quot;);</span>
 
-<span class="nc" id="L122">        content.append(&quot;&lt;h2&gt;&lt;a href=\&quot;/docs/view/Prime-Algorithms.md\&quot;&gt;🧮 Algorithms&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;&quot;);</span>
-<span class="nc bnc" id="L123" title="All 2 branches missed.">        for (String name : filenames) {</span>
-<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (algorithmDocs.contains(name)) {</span>
-<span class="nc" id="L125">                content.append(String.format(&quot;&lt;li&gt;&lt;a href=\&quot;/docs/view/%s\&quot;&gt;%s&lt;/a&gt;&lt;/li&gt;&quot;, name, name));</span>
+<span class="nc" id="L142">        content.append(&quot;&lt;h2&gt;&lt;a href=\&quot;/docs/view/Prime-Algorithms.md\&quot;&gt;🧮 Algorithms&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;&quot;);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        for (String name : filenames) {</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (algorithmDocs.contains(name)) {</span>
+<span class="nc" id="L145">                content.append(String.format(&quot;&lt;li&gt;&lt;a href=\&quot;/docs/view/%s\&quot;&gt;%s&lt;/a&gt;&lt;/li&gt;&quot;, name, name));</span>
             }
-<span class="nc" id="L127">        }</span>
-<span class="nc" id="L128">        content.append(&quot;&lt;/ul&gt;&quot;);</span>
+<span class="nc" id="L147">        }</span>
+<span class="nc" id="L148">        content.append(&quot;&lt;/ul&gt;&quot;);</span>
 
-<span class="nc" id="L130">        content.append(&quot;&lt;h2&gt;📘 Informational&lt;/h2&gt;&lt;ul&gt;&quot;);</span>
-<span class="nc bnc" id="L131" title="All 2 branches missed.">        for (String name : filenames) {</span>
-<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (infoDocs.contains(name)) {</span>
-<span class="nc" id="L133">                content.append(String.format(&quot;&lt;li&gt;&lt;a href=\&quot;/docs/view/%s\&quot;&gt;%s&lt;/a&gt;&lt;/li&gt;&quot;, name, name));</span>
+<span class="nc" id="L150">        content.append(&quot;&lt;h2&gt;📘 Informational&lt;/h2&gt;&lt;ul&gt;&quot;);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        for (String name : filenames) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            if (infoDocs.contains(name)) {</span>
+<span class="nc" id="L153">                content.append(String.format(&quot;&lt;li&gt;&lt;a href=\&quot;/docs/view/%s\&quot;&gt;%s&lt;/a&gt;&lt;/li&gt;&quot;, name, name));</span>
             }
-<span class="nc" id="L135">        }</span>
-<span class="nc" id="L136">        content.append(&quot;&lt;/ul&gt;&quot;);</span>
+<span class="nc" id="L155">        }</span>
+<span class="nc" id="L156">        content.append(&quot;&lt;/ul&gt;&quot;);</span>
 
-<span class="nc" id="L138">        content.append(&quot;&lt;h2&gt;📦 Miscellaneous&lt;/h2&gt;&lt;ul&gt;&quot;);</span>
-<span class="nc bnc" id="L139" title="All 2 branches missed.">        for (String name : filenames) {</span>
-<span class="nc bnc" id="L140" title="All 4 branches missed.">            if (!algorithmDocs.contains(name) &amp;&amp; !infoDocs.contains(name)) {</span>
-<span class="nc" id="L141">                content.append(String.format(&quot;&lt;li&gt;&lt;a href=\&quot;/docs/view/%s\&quot;&gt;%s&lt;/a&gt;&lt;/li&gt;&quot;, name, name));</span>
+<span class="nc" id="L158">        content.append(&quot;&lt;h2&gt;📦 Miscellaneous&lt;/h2&gt;&lt;ul&gt;&quot;);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        for (String name : filenames) {</span>
+<span class="nc bnc" id="L160" title="All 4 branches missed.">            if (!algorithmDocs.contains(name) &amp;&amp; !infoDocs.contains(name)) {</span>
+<span class="nc" id="L161">                content.append(String.format(&quot;&lt;li&gt;&lt;a href=\&quot;/docs/view/%s\&quot;&gt;%s&lt;/a&gt;&lt;/li&gt;&quot;, name, name));</span>
             }
-<span class="nc" id="L143">        }</span>
-<span class="nc" id="L144">        content.append(&quot;&lt;/ul&gt;&quot;);</span>
+<span class="nc" id="L163">        }</span>
+<span class="nc" id="L164">        content.append(&quot;&lt;/ul&gt;&quot;);</span>
 
-<span class="nc" id="L146">        return content.toString();</span>
+<span class="nc" id="L166">        return content.toString();</span>
     }
 
     public static String wrapHtml(String sidebar, String contentHtml, boolean includeBacklinks) {
-<span class="nc bnc" id="L150" title="All 2 branches missed.">        String backlinks = includeBacklinks ? &quot;&quot;&quot;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        String backlinks = includeBacklinks ? &quot;&quot;&quot;</span>
         &lt;div class=&quot;backlink&quot;&gt;
             &lt;p&gt;&lt;a href=&quot;/docs/view/Prime-Algorithms.md&quot;&gt;← Back to Prime Algorithms Overview&lt;/a&gt;&lt;/p&gt;
             &lt;p&gt;&lt;a href=&quot;/docs&quot;&gt;← Back to Documentation Index&lt;/a&gt;&lt;/p&gt;
         &lt;/div&gt;
-<span class="nc" id="L155">    &quot;&quot;&quot; : &quot;&quot;;</span>
+<span class="nc" id="L175">    &quot;&quot;&quot; : &quot;&quot;;</span>
 
-<span class="nc" id="L157">        return &quot;&quot;&quot;</span>
+<span class="nc" id="L177">        return &quot;&quot;&quot;</span>
         &lt;html&gt;
         &lt;head&gt;
             &lt;title&gt;Documentation Viewer&lt;/title&gt;
@@ -172,26 +192,26 @@ import java.util.List;
     }
 
     public static boolean isValidMarkdownFile(String filename) {
-<span class="nc bnc" id="L175" title="All 2 branches missed.">        return HtmlHelper.class.getClassLoader().getResource(&quot;docs/&quot; + filename) != null;</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        return HtmlHelper.class.getClassLoader().getResource(&quot;docs/&quot; + filename) != null;</span>
     }
 
     public static String readMarkdown(String filename) throws IOException {
-<span class="nc" id="L179">        try (var in = HtmlHelper.class.getClassLoader().getResourceAsStream(&quot;docs/&quot; + filename)) {</span>
-<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (in == null) throw new IOException(&quot;Markdown file not found: &quot; + filename);</span>
-<span class="nc" id="L181">            return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="nc" id="L199">        try (var in = HtmlHelper.class.getClassLoader().getResourceAsStream(&quot;docs/&quot; + filename)) {</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">            if (in == null) throw new IOException(&quot;Markdown file not found: &quot; + filename);</span>
+<span class="nc" id="L201">            return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);</span>
         }
     }
     public static String convertMarkdownToHtml(String filename, String markdown) {
-<span class="nc" id="L185">        String html = MarkdownConverter.toHtml(markdown);</span>
-<span class="nc bnc" id="L186" title="All 2 branches missed.">        if (filename.equals(&quot;Prime-Algorithms.md&quot;)) {</span>
-<span class="nc" id="L187">            html += buildAlgorithmTable();</span>
+<span class="nc" id="L205">        String html = MarkdownConverter.toHtml(markdown);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        if (filename.equals(&quot;Prime-Algorithms.md&quot;)) {</span>
+<span class="nc" id="L207">            html += buildAlgorithmTable();</span>
         }
-<span class="nc" id="L189">        return html;</span>
+<span class="nc" id="L209">        return html;</span>
     }
 
 
     public static String buildAlgorithmTable() {
-<span class="nc" id="L194">        return &quot;&quot;&quot;</span>
+<span class="nc" id="L214">        return &quot;&quot;&quot;</span>
         &lt;h2&gt;📊 Algorithm Comparison&lt;/h2&gt;
         &lt;table&gt;
           &lt;thead&gt;
@@ -228,11 +248,10 @@ import java.util.List;
     }
 
     public static String buildRecentRequestTable() {
-<span class="nc" id="L231">        List&lt;PrimePayload&gt; recent = PrimeRequestLog.getRecent();</span>
-<span class="nc bnc" id="L232" title="All 2 branches missed.">        if (recent.isEmpty()) return &quot;&lt;p&gt;No recent /api/primes requests logged.&lt;/p&gt;&quot;;</span>
+<span class="nc" id="L251">        List&lt;PrimePayload&gt; recent = PrimeRequestLog.getRecent();</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (recent.isEmpty()) return &quot;&lt;p&gt;No recent /api/primes requests logged.&lt;/p&gt;&quot;;</span>
 
-<span class="nc" id="L234">        StringBuilder table = new StringBuilder(&quot;&quot;&quot;</span>
-        &lt;h2&gt;🧮 Recent Prime Requests&lt;/h2&gt;
+<span class="nc" id="L254">        StringBuilder table = new StringBuilder(&quot;&quot;&quot;</span>
         &lt;table&gt;
             &lt;thead&gt;
                 &lt;tr&gt;
@@ -246,8 +265,8 @@ import java.util.List;
             &lt;tbody&gt;
     &quot;&quot;&quot;);
 
-<span class="nc bnc" id="L249" title="All 2 branches missed.">        for (PrimePayload p : recent) {</span>
-<span class="nc" id="L250">            table.append(String.format(&quot;&quot;&quot;</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        for (PrimePayload p : recent) {</span>
+<span class="nc" id="L269">            table.append(String.format(&quot;&quot;&quot;</span>
         &lt;tr&gt;
             &lt;td&gt;%s&lt;/td&gt;
             &lt;td&gt;%d&lt;/td&gt;
@@ -255,154 +274,303 @@ import java.util.List;
             &lt;td&gt;%d&lt;/td&gt;
             &lt;td&gt;%d&lt;/td&gt;
         &lt;/tr&gt;
-<span class="nc" id="L258">        &quot;&quot;&quot;, p.getAlgorithm(), p.getLimit(), p.getThreads(), p.getTotal(), p.getDurationMs()));</span>
-<span class="nc" id="L259">        }</span>
+<span class="nc" id="L277">        &quot;&quot;&quot;, p.getAlgorithm(), p.getLimit(), p.getThreads(), p.getTotal(), p.getDurationMs()));</span>
+<span class="nc" id="L278">        }</span>
 
-<span class="nc" id="L261">        table.append(&quot;&lt;/tbody&gt;&lt;/table&gt;&quot;);</span>
-<span class="nc" id="L262">        return table.toString();</span>
+<span class="nc" id="L280">        table.append(&quot;&lt;/tbody&gt;&lt;/table&gt;&quot;);</span>
+<span class="nc" id="L281">        return table.toString();</span>
     }
 
 
 
-<span class="nc" id="L267">    private static String styleBlock = &quot;&quot;&quot;</span>
-                &lt;style&gt;
-                body {
-                    margin: 0;
-                    font-family: sans-serif;
-                    display: flex;
-                }
-                .sidebar {
-                    width: 220px;
-                    max-width: 220px;
-                    background-color: #f4f4f4;
-                    padding: 1rem;
-                    border-right: 1px solid #ddd;
-                    overflow-x: hidden;
-                }
-                .sidebar h3 {
-                    margin-top: 0;
-                }
-                .sidebar ul {
-                    list-style: none;
-                    padding-left: 0;
-                }
-                .sidebar li {
-                    margin: 0.5rem 0;
-                }
-                .sidebar a {
-                    color: #007acc;
-                    text-decoration: none;
-                }
-                .sidebar a:hover {
-                    text-decoration: underline;
-                }
-                .content {
-                    flex: 1;
-                    padding: 2rem;
-                    max-width: 800px;
-                }
-                h1, h2, h3 {
-                    color: #333;
-                }
-                a {
-                    color: #007acc;
-                    text-decoration: none;
-                }
-                a:hover {
-                    text-decoration: underline;
-                }
-                .backlink {
-                    margin-top: 3rem;
-                    font-size: 0.9rem;
-                }
-                .recent-requests {
-                            margin-top: 2rem;
-                            font-size: 0.85em;
-                        }
-                
-                        .recent-requests table {
-                                        width: 100%;
-                                        table-layout: fixed;
-                                        word-wrap: break-word;
-                                        font-size: 0.8em;
+<span class="nc" id="L286">    private static String styleBlock = &quot;&quot;&quot;</span>
+           
+                                &lt;style&gt;
+                                  body {
+                                    background-color: #f9fafb;
+                                    color: #333;
+                                    font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+                                  }
+            
+                                  h1, h2, h3 {
+                                    color: #333;
+                                  }
+            
+                                  a {
+                                    color: #007acc;
+                                    text-decoration: none;
+                                  }
+            
+                                  a:hover {
+                                    text-decoration: underline;
+                                  }
+            
+                                  .sidebar {
+                                    width: 400px;
+                                    max-width: 400px;
+                                    height: 100vh;
+                                    padding: 1rem;
+                                    background-color: #ffffff;
+                                    border-right: 1px solid #e0e0e0;
+                                    box-sizing: border-box;
+                                    position: fixed;
+                                    top: 0;
+                                    left: 0;
+                                    overflow-y: auto;
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                                  }
+            
+                                  .sidebar h3 {
+                                    margin-top: 0;
+                                  }
+            
+                                  .sidebar ul {
+                                    list-style: none;
+                                    padding-left: 0;
+                                  }
+            
+                                  .sidebar li {
+                                    margin: 0.5rem 0;
+                                  }
+            
+                                  .sidebar-section h3 {
+                                    position: sticky;
+                                    top: 0;
+                                    background-color: #fff;
+                                    padding: 0.5rem 0;
+                                    z-index: 1;
+                                  }
+            
+                                  @media (max-width: 768px) {
+                                    .sidebar {
+                                      transform: translateX(-100%);
+                                      transition: transform 0.3s ease;
                                     }
-                
-                        .recent-requests th,
-                                     .recent-requests td {
-                                         padding: 4px;
-                                         text-align: left;
-                                         overflow: hidden;
-                                         text-overflow: ellipsis;
-                                         white-space: nowrap;
-                                     }
-                
-                        .recent-requests tr:hover {
-                            background-color: #f5f5f5;
-                        }
-                        .request-form {
+            
+                                    .sidebar.open {
+                                      transform: translateX(0);
+                                    }
+            
+                                    .sidebar-toggle {
+                                      position: fixed;
+                                      top: 1rem;
+                                      left: 1rem;
+                                      z-index: 1001;
+                                      background: #007acc;
+                                      color: white;
+                                      padding: 0.5rem;
+                                      border-radius: 4px;
+                                      cursor: pointer;
+                                    }
+                                  }
+            
+                                  .content {
+                                    margin-left: 400px;
+                                    padding: 2rem;
+                                    max-width: 1400px;
+                                    box-sizing: border-box;
+                                  }
+            
+                                  .backlink {
+                                    margin-top: 3rem;
+                                    font-size: 0.9rem;
+                                  }
+            
+                                  .recent-requests,
+                                  .request-form {
                                     margin-top: 2rem;
                                     font-size: 0.85em;
-                                }
-                
-                                .request-form label {
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                                  }
+            
+                                  .recent-requests table {
+                                    width: 100%;
+                                    table-layout: fixed;
+                                    word-wrap: break-word;
+                                    font-size: 0.8em;
+                                  }
+            
+                                  .recent-requests th,
+                                  .recent-requests td {
+                                    padding: 4px;
+                                    text-align: left;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    white-space: nowrap;
+                                  }
+            
+                                  .recent-requests tr:hover {
+                                    background-color: #f5f5f5;
+                                  }
+            
+                                  .request-form label {
                                     display: block;
                                     margin-top: 0.5rem;
-                                }
-                
-                                .request-form input,
-                                .request-form select {
+                                  }
+            
+                                  .request-form input,
+                                  .request-form select {
                                     width: 100%;
                                     padding: 4px;
                                     margin-top: 0.2rem;
                                     box-sizing: border-box;
-                                }
-                
-                                .request-form button {
+                                  }
+            
+                                  .request-form button {
                                     margin-top: 0.8rem;
                                     padding: 6px 12px;
                                     background-color: #007acc;
                                     color: white;
                                     border: none;
                                     cursor: pointer;
-                                }
-                
-                                .request-form button:hover {
+                                  }
+            
+                                  .request-form button:hover {
                                     background-color: #005fa3;
-                                }
-            &lt;/style&gt;
+                                  }
+            
+                                  .request-form button:active {
+                                    transform: scale(0.98);
+                                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+                                  }
+            
+                                  .form-box {
+                                    width: 100%;
+                                    display: flex;
+                                    flex-direction: column;
+                                    margin-bottom: 1rem;
+                                  }
+            
+                                  .form-box label {
+                                    margin-bottom: 0.3rem;
+                                    font-weight: 500;
+                                  }
+            
+                                  .form-box input,
+                                  .form-box select {
+                                    padding: 6px;
+                                    border: 1px solid #ccc;
+                                    border-radius: 4px;
+                                    box-sizing: border-box;
+                                  }
+            
+                                  .checkbox-label {
+                                    display: block;
+                                    padding-left: 15px;
+                                    text-indent: -15px;
+                                  }
+            
+                                  .checkbox-label input {
+                                    width: 13px;
+                                    height: 13px;
+                                    padding: 0;
+                                    margin: 0;
+                                    vertical-align: bottom;
+                                    position: relative;
+                                    top: -1px;
+                                    *overflow: hidden;
+                                  }
+            
+                                  #requestResult {
+                                    margin-top: 2rem;
+                                    padding: 1rem;
+                                    background-color: #ffffff;
+                                    border: 1px solid #ddd;
+                                    border-radius: 6px;
+                                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                                    white-space: pre-wrap;
+                                    word-wrap: break-word;
+                                    font-family: monospace;
+                                    font-size: 0.9em;
+                                    max-width: calc(100% - 420px);
+                                  }
+                                &lt;/style&gt;
+                                
 &quot;&quot;&quot;;
 
-<span class="nc" id="L375">    private static String jsBlock = &quot;&quot;&quot;</span>
+<span class="nc" id="L493">    private static String jsBlock = &quot;&quot;&quot;</span>
             &lt;script&gt;
             function submitPrimeRequest(event) {
-                event.preventDefault();
+                                   event.preventDefault();
             
-                const algo = document.getElementById(&quot;algorithm&quot;).value;
-                const limit = parseInt(document.getElementById(&quot;limit&quot;).value, 10);
-                const threads = parseInt(document.getElementById(&quot;threads&quot;).value, 10);
-                const useCache = document.getElementById(&quot;useCache&quot;).checked;
+                                   const algo = document.getElementById(&quot;algorithm&quot;).value;
+                                   const limit = parseInt(document.getElementById(&quot;limit&quot;).value, 10);
+                                   const threads = parseInt(document.getElementById(&quot;threads&quot;).value, 10);
+                                   const useCache = document.getElementById(&quot;useCache&quot;).checked;
+                                   const format = document.getElementById(&quot;format&quot;).value;
+                                   const download = document.getElementById(&quot;download&quot;).checked;
             
-                if (isNaN(limit) || limit &lt; 1) {
-                    alert(&quot;Limit must be a positive integer.&quot;);
-                    return;
-                }
+                                   if (isNaN(limit) || limit &lt; 1) {
+                                     alert(&quot;Limit must be a positive integer.&quot;);
+                                     return;
+                                   }
             
-                if (isNaN(threads) || threads &lt; 1 || threads &gt; 128) {
-                    alert(&quot;Threads must be between 1 and 128.&quot;);
-                    return;
-                }
+                                   if (isNaN(threads) || threads &lt; 1 || threads &gt; 128) {
+                                     alert(&quot;Threads must be between 1 and 128.&quot;);
+                                     return;
+                                   }
             
-                const url = `/api/primes?algorithm=${algo}&amp;limit=${limit}&amp;threads=${threads}&amp;useCache=${useCache}`;
-                fetch(url)
-                    .then(res =&gt; res.json())
-                    .then(data =&gt; {
-                        const resultDiv = document.getElementById(&quot;requestResult&quot;);
-                        resultDiv.innerHTML = `&lt;strong&gt;Result:&lt;/strong&gt; ${data.total} primes in ${data.durationMs}ms`;
-                    })
-                    .catch(err =&gt; {
-                        document.getElementById(&quot;requestResult&quot;).innerHTML = `&lt;span style=&quot;color:red;&quot;&gt;Error: ${err}&lt;/span&gt;`;
+                                   const url = `/api/primes?algorithm=${algo}&amp;limit=${limit}&amp;threads=${threads}&amp;useCache=${useCache}`;
+            
+                                   fetch(url, { headers: { &quot;Accept&quot;: format } })
+                                     .then(res =&gt; download ? res.blob() : res.text())
+                                     .then(data =&gt; {
+                                       if (download) {
+                                         const ext = format.includes(&quot;json&quot;) ? &quot;json&quot; : &quot;xml&quot;;
+                                         const fileUrl = URL.createObjectURL(data);
+                                         const a = document.createElement(&quot;a&quot;);
+                                         a.href = fileUrl;
+                                         a.download = `primes.${ext}`;
+                                         a.click();
+                                         URL.revokeObjectURL(fileUrl);
+            
+                                         // Also open in new tab with parsed content
+                                         const reader = new FileReader();
+                                         reader.onload = function () {
+                                           const blob = new Blob([reader.result], { type: format });
+                                           const tabUrl = URL.createObjectURL(blob);
+                                           window.open(tabUrl, &quot;_blank&quot;);
+                                         };
+                                         reader.readAsText(data);
+                                       } else {
+                                         const resultDiv = document.getElementById(&quot;requestResult&quot;);
+                                         resultDiv.innerHTML = `&lt;strong&gt;Result:&lt;/strong&gt; &lt;pre&gt;${escapeHtml(data)}&lt;/pre&gt;`;
+                                         refreshRecentRequests();
+            
+                                         // Open parsed content in new tab
+                                         const blob = new Blob([data], { type: format });
+                                         const tabUrl = URL.createObjectURL(blob);
+                                         window.open(tabUrl, &quot;_blank&quot;);
+                                       }
+                                     });
+                                 }
+            
+                                 function escapeHtml(str) {
+                                   return str.replace(/[&amp;&lt;&gt;&quot;']/g, m =&gt; ({
+                                     '&amp;': '&amp;amp;',
+                                     '&lt;': '&amp;lt;',
+                                     '&gt;': '&amp;gt;',
+                                     '&quot;': '&amp;quot;',
+                                     &quot;'&quot;: '&amp;#39;'
+                                   })[m]);
+                                 }
+            
+            function refreshRecentRequests() {
+                fetch(&quot;/docs/recent-requests-html&quot;)
+                    .then(res =&gt; res.text())
+                    .then(html =&gt; {
+                        document.getElementById(&quot;recentRequests&quot;).innerHTML = html;
                     });
             }
+            
+            function escapeHtml(str) {
+                return str.replace(/&amp;/g, &quot;&amp;amp;&quot;)
+                          .replace(/&lt;/g, &quot;&amp;lt;&quot;)
+                          .replace(/&gt;/g, &quot;&amp;gt;&quot;);
+            }
+            
             &lt;/script&gt;
             &quot;&quot;&quot;;
 
