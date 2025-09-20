@@ -57,6 +57,7 @@ public class HtmlHelper {
 
         // Static Swagger link
         sidebar.append("<li><a href='/swagger-ui.html' target='_blank'>Swagger UI</a></li>");
+        sidebar.append("<li><a href='/jacoco/index.html' target='_blank'>JaCoCo Coverage Report</a></li>");
 
 
         for (String name : filenames) {

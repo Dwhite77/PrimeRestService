@@ -2,6 +2,7 @@ package org.example.primeapi.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.MalformedChunkCodingException;
 import org.example.primeapi.model.APIResponse;
 import org.example.primeapi.util.ErrorResponseBuilder;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -81,5 +83,18 @@ public class GlobalExceptionHandler {
         log.warn("⚠️ IllegalArgumentException at '{}': {}", request.getRequestURI(), message);
         return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest(message, request), 400));
     }
+
+    @ExceptionHandler(MalformedChunkCodingException.class)
+    public void handleChunkError(MalformedChunkCodingException ex, HttpServletRequest request) {
+        log.warn("Chunked response failed at '{}': {}", request.getRequestURI(), ex.getMessage());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<APIResponse> handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
+        String message = "Resource not found: " + ex.getMessage();
+        log.warn("🔍 NoResourceFoundException at '{}': {}", request.getRequestURI(), message);
+        return ResponseEntity.status(404).body(APIResponse.error(ErrorResponseBuilder.notFound(message, request), 404));
+    }
+
 
 }

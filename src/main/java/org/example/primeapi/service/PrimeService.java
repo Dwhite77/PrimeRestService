@@ -3,6 +3,7 @@ package org.example.primeapi.service;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.primeapi.algo.PrimeAlgorithm;
+import org.example.primeapi.util.PrimeResultWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,7 +21,7 @@ public class PrimeService {
 
     private final Map<String, PrimeAlgorithm> algorithmMap;
 
-    @Value("${MAXLIMIT:1000000000}")
+    @Value("${MAXLIMIT:2147463646}")
     private int maxLimit;
 
     @Value("${MAXTHREADS:128}")
@@ -44,7 +45,7 @@ public class PrimeService {
     )
     public List<Integer> findPrimes(String algorithm, int limit, int threads, boolean useCache) {
 
-        if(limit==2){return List.of(2);}
+        if (limit == 2) return List.of(2);
         if (shouldSkip(algorithm, limit, threads)) return List.of();
 
         PrimeAlgorithm selected = algorithmMap.get(algorithm.toLowerCase());
@@ -53,10 +54,15 @@ public class PrimeService {
             throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
         }
 
-
         long start = System.nanoTime();
         List<Integer> results = selected.generate(limit, threads);
         durationMs = (System.nanoTime() - start) / 1_000_000;
+
+        // Wrap and trim if limit is large
+        if (limit > 100_000_000) {
+            PrimeResultWrapper wrapper = new PrimeResultWrapper(results, 100_000); // batch size can be tuned
+            return wrapper.getFirstBatch(); // return only first batch to avoid memory strain
+        }
 
         return results;
     }

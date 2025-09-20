@@ -17,6 +17,8 @@ public abstract class PrimeAlgorithmTestSupport {
     @Test
     void generatesPrimesUpTo100() {
         List<Integer> primes = getAlgorithm().generate(100, 1);
+        log.info(primes.toString());
+
         assertTrue(primes.containsAll(List.of(2, 3, 5, 7, 97)));
         assertFalse(primes.contains(100));
     }
