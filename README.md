@@ -111,7 +111,7 @@ Coverage is tracked via **JaCoCo**, including:
 - Cyclomatic complexity (number of independent logic paths—higher means more complex logic)
 - Method/class visibility (which components are exercised)
 
-👉 [View JaCoCo Coverage Report](/jacoco/index.html)
+👉 [View JaCoCo Coverage Report](src/main/resources/static/jacoco/index.html)
 
 ---
 
