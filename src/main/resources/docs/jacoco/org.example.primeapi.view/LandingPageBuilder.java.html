@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LandingPageBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PrimeNumberGenerator</a> &gt; <a href="index.source.html" class="el_package">org.example.primeapi.view</a> &gt; <span class="el_source">LandingPageBuilder.java</span></div><h1>LandingPageBuilder.java</h1><pre class="source lang-java linenums">package org.example.primeapi.view;
+
+<span class="nc" id="L3">public class LandingPageBuilder {</span>
+
+    public static String getHtml() {
+<span class="fc" id="L6">        return &quot;&quot;&quot;</span>
+            &lt;!DOCTYPE html&gt;
+            &lt;html lang=&quot;en&quot;&gt;
+            &lt;head&gt;
+                &lt;meta charset=&quot;UTF-8&quot;&gt;
+                &lt;title&gt;Prime API Landing Page&lt;/title&gt;
+                &lt;style&gt;
+                    body { font-family: Arial, sans-serif; margin: 2rem; background-color: #f9f9f9; }
+                    h1 { color: #2c3e50; }
+                    code { background-color: #eef; padding: 2px 6px; border-radius: 4px; }
+                    a { color: #2980b9; text-decoration: none; }
+                    a:hover { text-decoration: underline; }
+                    .section { margin-bottom: 1.5rem; }
+                &lt;/style&gt;
+            &lt;/head&gt;
+            &lt;body&gt;
+                &lt;h1&gt;🚀 Welcome to the Prime API&lt;/h1&gt;
+
+                &lt;div class=&quot;section&quot;&gt;
+                    &lt;p&gt;This API returns prime numbers using selectable algorithms:&lt;/p&gt;
+                    &lt;ul&gt;
+                        &lt;li&gt;&lt;code&gt;trial&lt;/code&gt; – simplest but slowest&lt;/li&gt;
+                        &lt;li&gt;&lt;code&gt;sieve&lt;/code&gt; – efficient for mid-range inputs&lt;/li&gt;
+                        &lt;li&gt;&lt;code&gt;atkin&lt;/code&gt; – optimized for large ranges&lt;/li&gt;
+                        &lt;li&gt;&lt;code&gt;miller&lt;/code&gt; – probabilistic primality testing&lt;/li&gt;
+                    &lt;/ul&gt;
+                &lt;/div&gt;
+
+                &lt;div class=&quot;section&quot;&gt;
+                    &lt;h2&gt;📘 Usage&lt;/h2&gt;
+                    &lt;p&gt;Send a GET request to:&lt;/p&gt;
+                    &lt;pre&gt;&lt;code&gt;/api/primes?limit=1000&amp;algorithm=sieve&amp;threads=4&lt;/code&gt;&lt;/pre&gt;
+                    &lt;p&gt;Parameters:&lt;/p&gt;
+                    &lt;ul&gt;
+                        &lt;li&gt;&lt;code&gt;limit&lt;/code&gt;: upper bound for prime generation (≥ 0)&lt;/li&gt;
+                        &lt;li&gt;&lt;code&gt;algorithm&lt;/code&gt;: one of &lt;code&gt;trial&lt;/code&gt;, &lt;code&gt;sieve&lt;/code&gt;, &lt;code&gt;atkin&lt;/code&gt;, &lt;code&gt;miller&lt;/code&gt;&lt;/li&gt;
+                        &lt;li&gt;&lt;code&gt;threads&lt;/code&gt;: number of threads to use (≥ 1)&lt;/li&gt;
+                    &lt;/ul&gt;
+                &lt;/div&gt;
+
+                &lt;div class=&quot;section&quot;&gt;
+                    &lt;h2&gt;📄 Documentation&lt;/h2&gt;
+                    &lt;p&gt;See the docs pages for more info on the algorithms and error handling:&lt;/p&gt;
+                    &lt;p&gt;&lt;a href=&quot;/docs&quot; target=&quot;_blank&quot;&gt;Documentation&lt;/a&gt;&lt;/p&gt;
+                &lt;/div&gt;
+
+                &lt;div class=&quot;section&quot;&gt;
+                    &lt;h2&gt;🧪 Try It&lt;/h2&gt;
+                    &lt;p&gt;Visit &lt;a href=&quot;/swagger-ui/index.html&quot;&gt;Swagger UI&lt;/a&gt; for interactive API testing.&lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/body&gt;
+            &lt;/html&gt;
+            &quot;&quot;&quot;;
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

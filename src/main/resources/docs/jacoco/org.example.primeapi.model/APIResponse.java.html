@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>APIResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PrimeNumberGenerator</a> &gt; <a href="index.source.html" class="el_package">org.example.primeapi.model</a> &gt; <span class="el_source">APIResponse.java</span></div><h1>APIResponse.java</h1><pre class="source lang-java linenums">package org.example.primeapi.model;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+
+@Schema(description = &quot;Standard API response wrapper containing either data or error details&quot;)
+@JsonPropertyOrder({&quot;httpStatus&quot;, &quot;data&quot;, &quot;error&quot;, &quot;timestamp&quot;})
+@Data
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JacksonXmlRootElement(localName = &quot;APIResponse&quot;)
+@JsonRootName(&quot;APIResponse&quot;)
+public class APIResponse {
+
+    @Schema(description = &quot;HTTP status code of the response&quot;, example = &quot;200&quot;)
+    @JsonProperty(&quot;httpStatus&quot;)
+    @JacksonXmlProperty(localName = &quot;httpStatus&quot;)
+    private int httpStatus;
+
+    @Schema(description = &quot;Payload containing prime generation results. Present only on success.&quot;)
+    @JsonProperty(&quot;data&quot;)
+    @JacksonXmlProperty(localName = &quot;data&quot;)
+    private PrimePayload data;
+
+    @Schema(description = &quot;Error details if the request failed. Present only on failure.&quot;)
+    @JsonProperty(&quot;error&quot;)
+    @JacksonXmlProperty(localName = &quot;error&quot;)
+    private ErrorPayload error;
+
+    @Schema(description = &quot;Timestamp when the response was generated&quot;, example = &quot;18-09-2025 15:09:00&quot;)
+    @JsonProperty(&quot;timestamp&quot;)
+    @JacksonXmlProperty(localName = &quot;timestamp&quot;)
+    private String timestamp;
+
+    public boolean isSuccessful() {
+<span class="pc bpc" id="L47" title="2 of 6 branches missed.">        return data != null &amp;&amp; error == null &amp;&amp; httpStatus == 200;</span>
+    }
+
+    public static APIResponse success(PrimePayload data, int httpStatus) {
+<span class="fc" id="L51">        return APIResponse.builder()</span>
+<span class="fc" id="L52">                .data(data)</span>
+<span class="fc" id="L53">                .httpStatus(httpStatus)</span>
+<span class="fc" id="L54">                .timestamp(nowFormatted())</span>
+<span class="fc" id="L55">                .build();</span>
+    }
+
+    public static APIResponse error(ErrorPayload error, int httpStatus) {
+<span class="fc" id="L59">        return APIResponse.builder()</span>
+<span class="fc" id="L60">                .error(error)</span>
+<span class="fc" id="L61">                .httpStatus(httpStatus)</span>
+<span class="fc" id="L62">                .timestamp(nowFormatted())</span>
+<span class="fc" id="L63">                .build();</span>
+    }
+
+<span class="fc" id="L66">    private static final DateTimeFormatter TIMESTAMP_FORMATTER =</span>
+<span class="fc" id="L67">            DateTimeFormatter.ofPattern(&quot;dd-MM-yyyy HH:mm:ss&quot;).withZone(ZoneId.systemDefault());</span>
+
+    private static String nowFormatted() {
+<span class="fc" id="L70">        return TIMESTAMP_FORMATTER.format(Instant.now());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

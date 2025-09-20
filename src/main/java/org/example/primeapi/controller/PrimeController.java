@@ -131,11 +131,13 @@ public class PrimeController {
     )
     @GetMapping("/docs")
     public String listMarkdownFiles() {
-        List<File> files = HtmlHelper.getMarkdownFiles();
-        String sidebar = HtmlHelper.buildSidebar(files);
-        String content = HtmlHelper.buildIndexContent(files);
+        List<String> filenames = HtmlHelper.getMarkdownFiles();
+        String sidebar = HtmlHelper.buildSidebar(filenames);
+        String content = HtmlHelper.buildIndexContent(filenames);
         return HtmlHelper.wrapHtml(sidebar, content, false);
     }
+
+
 
     @Tag(name = "Documentation", description = "Endpoints for viewing Markdown-based documentation")
     @Operation(
@@ -164,18 +166,8 @@ public class PrimeController {
         }
     }
 
-    @Tag(name = "Documentation", description = "Endpoints for viewing Markdown-based documentation")
-    @Operation(
-            summary = "Get documentation index as JSON",
-            description = "Returns a list of Markdown filenames available in the documentation directory.",
-            tags = { "Documentation" }
-    )
-    @GetMapping("/docs/index.json")
-    public List<String> getMarkdownIndex() {
-        return HtmlHelper.getMarkdownFiles().stream()
-                .map(File::getName)
-                .toList();
-    }
+
+
 
 
 

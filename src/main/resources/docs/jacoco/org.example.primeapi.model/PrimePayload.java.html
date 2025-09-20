@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrimePayload.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PrimeNumberGenerator</a> &gt; <a href="index.source.html" class="el_package">org.example.primeapi.model</a> &gt; <span class="el_source">PrimePayload.java</span></div><h1>PrimePayload.java</h1><pre class="source lang-java linenums">package org.example.primeapi.model;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
+
+import java.util.List;
+
+@Schema(description = &quot;Payload containing prime generation results&quot;)
+@Builder
+@AllArgsConstructor
+@ToString
+@Getter
+@Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JacksonXmlRootElement(localName = &quot;PrimeResponse&quot;)
+@JsonPropertyOrder({&quot;algorithm&quot;, &quot;limit&quot;, &quot;threads&quot;, &quot;primes&quot;, &quot;total&quot;, &quot;durationMs&quot;})
+public class PrimePayload {
+
+    @Schema(description = &quot;Algorithm used for prime generation&quot;, example = &quot;sieve&quot;)
+    @JsonProperty(&quot;algorithm&quot;)
+    @JacksonXmlProperty(localName = &quot;algorithm&quot;)
+    private String algorithm;
+
+    @Schema(description = &quot;Upper limit for prime generation&quot;, example = &quot;1000&quot;)
+    @JsonProperty(&quot;limit&quot;)
+    @JacksonXmlProperty(localName = &quot;limit&quot;)
+    private int limit;
+
+    @Schema(description = &quot;Number of threads used for computation&quot;, example = &quot;4&quot;)
+    @JsonProperty(&quot;threads&quot;)
+    @JacksonXmlProperty(localName = &quot;threads&quot;)
+    private int threads;
+
+    @Schema(description = &quot;List of prime numbers generated&quot;)
+    @JsonProperty(&quot;primes&quot;)
+    @JacksonXmlElementWrapper(localName = &quot;primes&quot;)
+    @JacksonXmlProperty(localName = &quot;prime&quot;)
+    private List&lt;Integer&gt; primes;
+
+    @Schema(description = &quot;Total number of primes found&quot;, example = &quot;168&quot;)
+    @JsonProperty(&quot;total&quot;)
+    @JacksonXmlProperty(localName = &quot;total&quot;)
+    private int total;
+
+    @Schema(description = &quot;Time taken to compute primes in milliseconds&quot;, example = &quot;12&quot;)
+    @JsonProperty(&quot;durationMs&quot;)
+    @JacksonXmlProperty(localName = &quot;durationMs&quot;)
+    private long durationMs;
+
+<span class="nc" id="L56">    public PrimePayload() {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
