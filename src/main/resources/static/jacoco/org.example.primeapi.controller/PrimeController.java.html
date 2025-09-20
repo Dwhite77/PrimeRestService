@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrimeController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PrimeNumberGenerator</a> &gt; <a href="index.source.html" class="el_package">org.example.primeapi.controller</a> &gt; <span class="el_source">PrimeController.java</span></div><h1>PrimeController.java</h1><pre class="source lang-java linenums">package org.example.primeapi.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -33,10 +35,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-<span class="fc" id="L36">@Slf4j</span>
+<span class="fc" id="L38">@Slf4j</span>
 @RestController
 @RequestMapping(&quot;/&quot;)
-<span class="fc" id="L39">public class PrimeController {</span>
+<span class="fc" id="L41">public class PrimeController {</span>
 
     @Autowired
     private PrimeService primeService;
@@ -58,14 +60,7 @@ import java.util.Set;
             @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Successful prime generation&quot;, content = {
                     @Content(mediaType = &quot;application/json&quot;, schema = @Schema(implementation = PrimePayload.class))
             }),
-            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;&quot;&quot;
-        Bad request due to:
-        - Missing required parameters
-        - Invalid parameter types
-        - Unsupported algorithm
-        - Illegal argument
-        - Malformed request body
-        &quot;&quot;&quot;, content = {
+            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Bad request due to invalid parameters or unsupported algorithm&quot;, content = {
                     @Content(mediaType = &quot;application/json&quot;, schema = @Schema(implementation = ErrorPayload.class))
             }),
             @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Path not found or missing path variable&quot;, content = {
@@ -74,49 +69,55 @@ import java.util.Set;
             @ApiResponse(responseCode = &quot;405&quot;, description = &quot;HTTP method not supported for this endpoint&quot;, content = {
                     @Content(mediaType = &quot;application/json&quot;, schema = @Schema(implementation = ErrorPayload.class))
             }),
-            @ApiResponse(responseCode = &quot;500&quot;, description = &quot;&quot;&quot;
-        Internal server error due to:
-        - Unhandled exceptions
-        - Runtime failures
-        - ResponseStatusException
-        &quot;&quot;&quot;, content = {
+            @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Internal server error due to unhandled exceptions&quot;, content = {
                     @Content(mediaType = &quot;application/json&quot;, schema = @Schema(implementation = ErrorPayload.class))
             })
     })
     @GetMapping(path=&quot;/api/primes&quot;, produces = { &quot;application/json&quot;, &quot;application/xml&quot; })
     public ResponseEntity&lt;APIResponse&gt; getPrimes(
+            @Parameter(description = &quot;Upper bound for prime generation (must be ≥ 0)&quot;, required = true)
             @RequestParam int limit,
+
+            @Parameter(description = &quot;Algorithm to use: trial, sieve, atkin, miller&quot;, example = &quot;sieve&quot;)
             @RequestParam(defaultValue = &quot;trial&quot;) String algorithm,
+
+            @Parameter(description = &quot;Number of threads to use (must be ≥ 1)&quot;, example = &quot;4&quot;)
             @RequestParam(defaultValue = &quot;1&quot;) int threads,
+
+            @Parameter(description = &quot;Whether to use cached results if available&quot;, example = &quot;true&quot;)
             @RequestParam(defaultValue = &quot;false&quot;) boolean useCache,
+
             HttpServletRequest request
+
     ) {
-<span class="fc" id="L94">        log.info(&quot;Algorithm '{}' requested for limit {} with {} thread(s)&quot;, algorithm, limit, threads);</span>
+<span class="fc" id="L93">        log.info(&quot;Algorithm '{}' requested for limit {} with {} thread(s)&quot;, algorithm, limit, threads);</span>
 
-<span class="fc bfc" id="L96" title="All 4 branches covered.">        if (limit &lt; 0 || threads &lt; 1) {</span>
-<span class="fc" id="L97">            ErrorPayload error = ErrorResponseBuilder.badRequest(&quot;Limit must be non-negative and threads must be &gt;= 1&quot;, request);</span>
-<span class="fc" id="L98">            return ResponseEntity.status(400).body(APIResponse.error(error, 400));</span>
+<span class="fc bfc" id="L95" title="All 4 branches covered.">        if (limit &lt; 0 || threads &lt; 1) {</span>
+<span class="fc" id="L96">            ErrorPayload error = ErrorResponseBuilder.badRequest(&quot;Limit must be non-negative and threads must be &gt;= 1&quot;, request);</span>
+<span class="fc" id="L97">            return ResponseEntity.status(400).body(APIResponse.error(error, 400));</span>
         }
 
-<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (!Algos.isValidAlgo(algorithm)) {</span>
-<span class="fc" id="L102">            ErrorPayload error = ErrorResponseBuilder.badRequest(&quot;Unsupported algorithm: &quot; + algorithm, request);</span>
-<span class="fc" id="L103">            return ResponseEntity.status(400).body(APIResponse.error(error, 400));</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (!Algos.isValidAlgo(algorithm)) {</span>
+<span class="fc" id="L101">            ErrorPayload error = ErrorResponseBuilder.badRequest(&quot;Unsupported algorithm: &quot; + algorithm, request);</span>
+<span class="fc" id="L102">            return ResponseEntity.status(400).body(APIResponse.error(error, 400));</span>
         }
 
-<span class="fc" id="L106">        List&lt;Integer&gt; primes = primeService.findPrimes(algorithm.toLowerCase(), limit, threads, useCache);</span>
+<span class="fc" id="L105">        List&lt;Integer&gt; primes = primeService.findPrimes(algorithm.toLowerCase(), limit, threads, useCache);</span>
 
-<span class="fc" id="L108">        PrimePayload payload = new PrimePayload(</span>
-<span class="fc" id="L109">                algorithm, limit, threads, primes, primes.size(), primeService.getDurationMs()</span>
+<span class="fc" id="L107">        PrimePayload payload = new PrimePayload(</span>
+<span class="fc" id="L108">                algorithm, limit, threads, primes, primes.size(), primeService.getDurationMs()</span>
         );
-<span class="fc" id="L111">        PrimeRequestLog.log(payload);</span>
-<span class="fc" id="L112">        return ResponseEntity.ok(APIResponse.success(payload, 200));</span>
+<span class="fc" id="L110">        PrimeRequestLog.log(payload);</span>
+<span class="fc" id="L111">        return ResponseEntity.ok(APIResponse.success(payload, 200));</span>
     }
 
 
+    @Hidden
     @GetMapping
-    public RedirectView redirectToInfo(){
+    public RedirectView redirectToInfo() {
 <span class="fc" id="L118">        return new RedirectView(&quot;/api/info&quot;);</span>
     }
+
 
     @ApiResponses({
             @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Returns landing page HTML&quot;),
@@ -124,7 +125,7 @@ import java.util.Set;
     })
     @GetMapping(path = &quot;/api/info&quot;, produces = &quot;text/html&quot;)
     public String landingPage() {
-<span class="fc" id="L127">        return LandingPageBuilder.getHtml();</span>
+<span class="fc" id="L128">        return LandingPageBuilder.getHtml();</span>
     }
 
 
@@ -138,37 +139,39 @@ import java.util.Set;
             description = &quot;Evicts cached prime results from memory. Clears all caches by default, or a specific cache if 'target' is provided.&quot;,
             tags = { &quot;Cache&quot; }
     )
+    @Parameter(name = &quot;target&quot;, description = &quot;Optional cache name to clear: 'primes' or 'basePrimes'&quot;)
     @GetMapping(&quot;/api/cache/clear&quot;)
-    public ResponseEntity&lt;PrimePayload&gt; clearCache(@RequestParam(required = false) String target) {
-<span class="nc" id="L143">        Set&lt;String&gt; validCaches = Set.of(&quot;primes&quot;, &quot;basePrimes&quot;);</span>
-<span class="nc" id="L144">        List&lt;Integer&gt; clearedCodes = new ArrayList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (target == null) {</span>
-<span class="nc" id="L147">            primeService.clearPrimeCache();</span>
-<span class="nc" id="L148">            primeService.clearBasePrimeCache();</span>
-<span class="nc" id="L149">            clearedCodes.addAll(List.of(1, 2)); // 1 = primes, 2 = basePrimes</span>
-<span class="nc" id="L150">            log.info(&quot;✅ All caches cleared via PrimeService&quot;);</span>
+    public ResponseEntity&lt;PrimePayload&gt; clearCache(@RequestParam(required = false) String target) {
+<span class="fc" id="L146">        Set&lt;String&gt; validCaches = Set.of(&quot;primes&quot;, &quot;basePrimes&quot;);</span>
+<span class="fc" id="L147">        List&lt;Integer&gt; clearedCodes = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        if (target == null) {</span>
+<span class="fc" id="L150">            primeService.clearPrimeCache();</span>
+<span class="fc" id="L151">            primeService.clearBasePrimeCache();</span>
+<span class="fc" id="L152">            clearedCodes.addAll(List.of(1, 2)); // 1 = primes, 2 = basePrimes</span>
+<span class="fc" id="L153">            log.info(&quot;✅ All caches cleared via PrimeService&quot;);</span>
         } else {
-<span class="nc bnc" id="L152" title="All 3 branches missed.">            switch (target) {</span>
+<span class="pc bpc" id="L155" title="1 of 3 branches missed.">            switch (target) {</span>
                 case &quot;primes&quot; -&gt; {
-<span class="nc" id="L154">                    primeService.clearPrimeCache();</span>
-<span class="nc" id="L155">                    clearedCodes.add(1);</span>
-<span class="nc" id="L156">                    log.info(&quot;✅ Prime cache cleared via PrimeService&quot;);</span>
-<span class="nc" id="L157">                }</span>
+<span class="fc" id="L157">                    primeService.clearPrimeCache();</span>
+<span class="fc" id="L158">                    clearedCodes.add(1);</span>
+<span class="fc" id="L159">                    log.info(&quot;✅ Prime cache cleared via PrimeService&quot;);</span>
+<span class="fc" id="L160">                }</span>
                 case &quot;basePrimes&quot; -&gt; {
-<span class="nc" id="L159">                    primeService.clearBasePrimeCache();</span>
-<span class="nc" id="L160">                    clearedCodes.add(2);</span>
-<span class="nc" id="L161">                    log.info(&quot;✅ Base prime cache cleared via PrimeService&quot;);</span>
-<span class="nc" id="L162">                }</span>
+<span class="nc" id="L162">                    primeService.clearBasePrimeCache();</span>
+<span class="nc" id="L163">                    clearedCodes.add(2);</span>
+<span class="nc" id="L164">                    log.info(&quot;✅ Base prime cache cleared via PrimeService&quot;);</span>
+<span class="nc" id="L165">                }</span>
                 default -&gt; {
-<span class="nc" id="L164">                    log.warn(&quot;❌ Invalid cache target: {}&quot;, target);</span>
-<span class="nc" id="L165">                    return ResponseEntity.badRequest().body(new PrimePayload(&quot;invalid-cache&quot;, 0, 0, List.of(), 0, 0));</span>
+<span class="fc" id="L167">                    log.warn(&quot;❌ Invalid cache target: {}&quot;, target);</span>
+<span class="fc" id="L168">                    return ResponseEntity.badRequest().body(new PrimePayload(&quot;invalid-cache&quot;, 0, 0, List.of(), 0, 0));</span>
                 }
             }
         }
 
-<span class="nc" id="L170">        PrimePayload payload = new PrimePayload(&quot;cache-cleared&quot;, 0, 0, clearedCodes, 0, 0);</span>
-<span class="nc" id="L171">        return ResponseEntity.ok(payload);</span>
+<span class="fc" id="L173">        PrimePayload payload = new PrimePayload(&quot;cache-cleared&quot;, 0, 0, clearedCodes, 0, 0);</span>
+<span class="fc" id="L174">        return ResponseEntity.ok(payload);</span>
     }
 
     //----------------Documentation Controller--------------
@@ -182,10 +185,10 @@ import java.util.Set;
     )
     @GetMapping(&quot;/docs&quot;)
     public String listMarkdownFiles() {
-<span class="nc" id="L185">        List&lt;String&gt; filenames = HtmlHelper.getMarkdownFiles();</span>
-<span class="nc" id="L186">        String sidebar = HtmlHelper.buildSidebar(filenames);</span>
-<span class="nc" id="L187">        String content = HtmlHelper.buildIndexContent(filenames);</span>
-<span class="nc" id="L188">        return HtmlHelper.wrapHtml(sidebar, content, false);</span>
+<span class="fc" id="L188">        List&lt;String&gt; filenames = HtmlHelper.getMarkdownFiles();</span>
+<span class="fc" id="L189">        String sidebar = HtmlHelper.buildSidebar(filenames);</span>
+<span class="fc" id="L190">        String content = HtmlHelper.buildIndexContent(filenames);</span>
+<span class="fc" id="L191">        return HtmlHelper.wrapHtml(sidebar, content, false);</span>
     }
 
 
@@ -196,30 +199,38 @@ import java.util.Set;
             description = &quot;Renders the specified Markdown file as styled HTML with sidebar and backlinks.&quot;,
             tags = { &quot;Documentation&quot; }
     )
+    @Parameter(name = &quot;filename&quot;, description = &quot;Name of the Markdown file to render&quot;)
     @GetMapping(&quot;/docs/view/{filename}&quot;)
     public ResponseEntity&lt;String&gt; viewMarkdownAsHtml(@PathVariable String filename) {
-<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (!HtmlHelper.isValidMarkdownFile(filename)) {</span>
-<span class="nc" id="L202">            return ResponseEntity.status(404).body(&quot;&lt;h2&gt;File not found: &quot; + filename + &quot;&lt;/h2&gt;&quot;);</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (!HtmlHelper.isValidMarkdownFile(filename)) {</span>
+<span class="fc" id="L206">            return ResponseEntity.status(404).body(&quot;&lt;h2&gt;File not found: &quot; + filename + &quot;&lt;/h2&gt;&quot;);</span>
         }
 
         try {
-<span class="nc" id="L206">            String markdown = HtmlHelper.readMarkdown(filename);</span>
-<span class="nc" id="L207">            String html = HtmlHelper.convertMarkdownToHtml(filename, markdown);</span>
-<span class="nc" id="L208">            String sidebar = HtmlHelper.buildSidebar(HtmlHelper.getMarkdownFiles());</span>
-<span class="nc" id="L209">            String fullHtml = HtmlHelper.wrapHtml(sidebar, html, true);</span>
+<span class="fc" id="L210">            String markdown = HtmlHelper.readMarkdown(filename);</span>
+<span class="fc" id="L211">            String html = HtmlHelper.convertMarkdownToHtml(filename, markdown);</span>
+<span class="fc" id="L212">            String sidebar = HtmlHelper.buildSidebar(HtmlHelper.getMarkdownFiles());</span>
+<span class="fc" id="L213">            String fullHtml = HtmlHelper.wrapHtml(sidebar, html, true);</span>
 
-<span class="nc" id="L211">            return ResponseEntity.ok()</span>
-<span class="nc" id="L212">                    .header(&quot;Content-Type&quot;, &quot;text/html; charset=UTF-8&quot;)</span>
-<span class="nc" id="L213">                    .body(fullHtml);</span>
+<span class="fc" id="L215">            return ResponseEntity.ok()</span>
+<span class="fc" id="L216">                    .header(&quot;Content-Type&quot;, &quot;text/html; charset=UTF-8&quot;)</span>
+<span class="fc" id="L217">                    .body(fullHtml);</span>
 
-<span class="nc" id="L215">        } catch (IOException e) {</span>
-<span class="nc" id="L216">            return ResponseEntity.status(500).body(&quot;&lt;h2&gt;Error reading file: &quot; + filename + &quot;&lt;/h2&gt;&quot;);</span>
+<span class="nc" id="L219">        } catch (IOException e) {</span>
+<span class="nc" id="L220">            return ResponseEntity.status(500).body(&quot;&lt;h2&gt;Error reading file: &quot; + filename + &quot;&lt;/h2&gt;&quot;);</span>
         }
     }
 
+    @Tag(name = &quot;Documentation&quot;, description = &quot;Endpoints for viewing Markdown-based documentation&quot;)
+    @Operation(
+            summary = &quot;View recent prime requests as HTML&quot;,
+            description = &quot;Returns a styled HTML table of recent prime generation requests.&quot;,
+            tags = { &quot;Documentation&quot; }
+    )
     @GetMapping(&quot;/docs/recent-requests-html&quot;)
+
     public ResponseEntity&lt;String&gt; recentRequestsHtml() {
-<span class="nc" id="L222">        return ResponseEntity.ok(HtmlHelper.buildRecentRequestTable());</span>
+<span class="fc" id="L233">        return ResponseEntity.ok(HtmlHelper.buildRecentRequestTable());</span>
     }
 
 
@@ -234,7 +245,7 @@ import java.util.Set;
     )
     @GetMapping(&quot;/api/trigger-runtime-exception&quot;)
     public APIResponse triggerException() {
-<span class="fc" id="L237">        throw new RuntimeException(&quot;Boom&quot;);</span>
+<span class="fc" id="L248">        throw new RuntimeException(&quot;Boom&quot;);</span>
     }
     @Tag(name = &quot;Error Simulation&quot;, description = &quot;Endpoints that trigger various exceptions for testing&quot;)
     @Operation(
@@ -244,7 +255,7 @@ import java.util.Set;
     )
     @GetMapping(&quot;/api/trigger-response-status&quot;)
     public void triggerResponseStatus() {
-<span class="fc" id="L247">        throw new ResponseStatusException(HttpStatus.I_AM_A_TEAPOT, &quot;I'm a teapot&quot;);</span>
+<span class="fc" id="L258">        throw new ResponseStatusException(HttpStatus.I_AM_A_TEAPOT, &quot;I'm a teapot&quot;);</span>
     }
     @Tag(name = &quot;Error Simulation&quot;, description = &quot;Endpoints that trigger various exceptions for testing&quot;)
     @Operation(
@@ -254,7 +265,7 @@ import java.util.Set;
     )
     @GetMapping(&quot;/api/trigger-illegal-argument&quot;)
     public void triggerIllegalArgument() {
-<span class="fc" id="L257">        throw new IllegalArgumentException(&quot;Illegal argument&quot;);</span>
+<span class="fc" id="L268">        throw new IllegalArgumentException(&quot;Illegal argument&quot;);</span>
     }
 
 

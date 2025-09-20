@@ -93,7 +93,7 @@ class GlobalExceptionHandlerIntegrationTest {
         response.then()
                 .statusCode(404)
                 .body("error.status", equalTo(404))
-                .body("error.message", containsString("Unknown path"))
+                .body("error.message", containsString("Resource not found:"))
                 .body("error.path", equalTo("/api/does-not-exist"))
                 .body("timestamp", matchesRegex("\\d{2}-\\d{2}-\\d{4} \\d{2}:\\d{2}:\\d{2}"));
     }

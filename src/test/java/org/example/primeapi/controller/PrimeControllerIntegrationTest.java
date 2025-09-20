@@ -30,6 +30,7 @@ public class PrimeControllerIntegrationTest {
 
     private TestHelperMethods THM = new TestHelperMethods();
 
+
     @LocalServerPort
     private int port;
 
@@ -39,6 +40,7 @@ public class PrimeControllerIntegrationTest {
 
     @BeforeAll
     void setup() {
+        //THM.setRunBenchmark(true);
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port; // or whatever port your app runs on
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -193,9 +195,28 @@ public class PrimeControllerIntegrationTest {
     @Test
     void benchmarkSieveAcrossThreads() {
         THM.skipTest();
-        int limit = 1_000_000;
+        int limit = 1_000_00000;
         for (int threads : List.of(1, 2, 4, 8, 16)) {
             long duration = benchmark("sieve", limit, threads);
+            log.info("Sieve with {} thread(s): {} ms", threads, duration);
+        }
+    }
+
+    @Test
+    void benchmarkMillerAcrossThreads() {
+        THM.skipTest();
+        int limit = 1_000_00000;
+        for (int threads : List.of(1, 2, 4, 8, 16)) {
+            long duration = benchmark("miller", limit, threads);
+            log.info("Sieve with {} thread(s): {} ms", threads, duration);
+        }
+    }
+    @Test
+    void benchmarkAtkinAcrossThreads() {
+        THM.skipTest();
+        int limit = 1_000_00000;
+        for (int threads : List.of(1, 2, 4, 8, 16)) {
+            long duration = benchmark("atkin", limit, threads);
             log.info("Sieve with {} thread(s): {} ms", threads, duration);
         }
     }
@@ -209,6 +230,7 @@ public class PrimeControllerIntegrationTest {
             log.info("{} (1 thread): {} ms", algo, duration);
         }
     }
+
 
 
     @Test
@@ -231,6 +253,43 @@ public class PrimeControllerIntegrationTest {
         });
     }
 
+    @Test
+    void benchmarkMatrixWithCacheToggle() {
+        THM.skipTest();
+        log.info("starting the benchmarkmatrix with cache toggle");
+        int limit = 100_000_000;
+
+        for (String algo : List.of("sieve", "atkin")) {
+            Map<Integer, Long> threadResults = new LinkedHashMap<>();
+
+            boolean useCache = algo.equals("sieve") || algo.equals("atkin");
+
+            for (int threads : List.of(2, 4, 6, 8)) {
+                long duration = benchmarkWithCacheOption(algo, limit, threads, useCache);
+                threadResults.put(threads, duration);
+            }
+
+            results.put(algo, threadResults);
+        }
+
+        results.forEach((algo, threadMap) -> {
+            log.info("Results for {}{}:", algo, (algo.equals("sieve") || algo.equals("atkin")) ? " (cached)" : "");
+            threadMap.forEach((threads, duration) ->
+                    log.info("  {} thread(s): {} ms", threads, duration));
+        });
+    }
+
+
+    @Test
+    void testAtkinAlgorithMaxLimit() {
+        Response response = sendPrimeRequest(1000000000, "atkin", 2, null);
+        assertSuccess(response, 1000000000, "atkin", 2);
+    }
+    @Test
+    void testSieveAlgorithmMaxLimit() {
+        Response response = sendPrimeRequest(1000000000, "sieve", 2, null);
+        assertSuccess(response, 1000000000, "sieve", 2);
+    }
 
 
     //-----------------------------------------------
@@ -279,7 +338,7 @@ public class PrimeControllerIntegrationTest {
 
         response.then()
                 .statusCode(404)
-                .body("error.message", containsString("Unknown path"));
+                .body("error.message", containsString("Resource not found:"));
     }
 
     @Test
@@ -455,6 +514,103 @@ public class PrimeControllerIntegrationTest {
 
     }
 
+
+    @Test
+    void clearAllCachesReturnsSuccessPayload() {
+        Response response = given()
+                .accept("application/json")
+                .get("/api/cache/clear");
+
+        logResponse(response);
+        response.then()
+                .statusCode(200)
+                .body("algorithm", equalTo("cache-cleared"))
+                .body("primes", hasItems(1, 2)); // 1 = primes, 2 = basePrimes
+    }
+
+    @Test
+    void clearSpecificCacheReturnsCorrectCode() {
+        Response response = given()
+                .accept("application/json")
+                .queryParam("target", "primes")
+                .get("/api/cache/clear");
+
+        logResponse(response);
+        response.then()
+                .statusCode(200)
+                .body("algorithm", equalTo("cache-cleared"))
+                .body("primes", hasItem(1));
+    }
+
+    @Test
+    void invalidCacheTargetReturnsBadRequest() {
+        Response response = given()
+                .accept("application/json")
+                .queryParam("target", "notacache")
+                .get("/api/cache/clear");
+
+        logResponse(response);
+        response.then()
+                .statusCode(400)
+                .body("algorithm", equalTo("invalid-cache"))
+                .body("primes.size()", equalTo(0));
+    }
+
+    @Test
+    void markdownFileIsRenderedAsHtml() {
+        Response response = given()
+                .accept("text/html")
+                .get("/docs/view/README.md");
+
+        logResponse(response);
+        response.then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("<h1>")) // assuming README starts with a heading
+                .body(containsString("sidebar")); // confirms layout wrapper
+    }
+
+    @Test
+    void invalidMarkdownFileReturns404Html() {
+        Response response = given()
+                .accept("text/html")
+                .get("/docs/view/does-not-exist.md");
+
+        logResponse(response);
+        response.then()
+                .statusCode(404)
+                .body(containsString("File not found"));
+    }
+
+    @Test
+    void markdownIndexListsAvailableFiles() {
+        Response response = given()
+                .accept("text/html")
+                .get("/docs");
+
+        logResponse(response);
+        response.then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Documentation Index"))
+                .body(containsString(".md")); // confirms file listing
+    }
+
+    @Test
+    void recentRequestsHtmlIsAccessible() {
+        Response response = given()
+                .accept("text/html")
+                .get("/docs/recent-requests-html");
+
+        logResponse(response);
+        response.then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("<table"))
+                .body(containsString("Algorithm"))
+                .body(containsString("Limit"));
+    }
+
     //-----------Helper Methods----------
 
 
@@ -480,6 +636,24 @@ public class PrimeControllerIntegrationTest {
                 .body("data.primes.size()", greaterThan(0));
 
 
+    }
+
+    private long benchmarkWithCacheOption(String algorithm, int limit, int threads, boolean useCache) {
+        var request = given()
+                .queryParam("limit", limit)
+                .queryParam("algorithm", algorithm)
+                .queryParam("threads", threads)
+                .queryParam("useCache", useCache);
+
+        Response response = request.get("/api/primes");
+        logResponse(response);
+        response.then().statusCode(200);
+
+        long duration = response.jsonPath().getLong("data.durationMs");
+        log.info("Benchmark → Algorithm: {}, Threads: {}, Limit: {}, Cache: {}, Duration: {} ms",
+                algorithm, threads, limit, useCache, duration);
+
+        return duration;
     }
 
     private void logDuration(Response response) {
