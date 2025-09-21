@@ -1,5 +1,6 @@
 package org.example.primeapi.view;
 
+import org.example.primeapi.algo.Algorithms.AtkinAlgorithm;
 import org.example.primeapi.model.PrimePayload;
 
 import java.io.File;
@@ -51,18 +52,32 @@ public class HtmlHelper {
 
         sidebar.append("<div class=\"sidebar\">");
         sidebar.append("<h2> Helpful Info </h2>");
-        // 📄 Docs section
+
         sidebar.append("<div class=\"sidebar-section\">");
         sidebar.append("<h3>📄 Docs</h3><ul>");
 
-        // Static Swagger link
+        sidebar.append(buildDocAppend("README.md", "README"));
         sidebar.append("<li><a href='/swagger-ui.html' target='_blank'>Swagger UI</a></li>");
+
+        sidebar.append("<h3>Algorithm Info</h3><ul>");
+        sidebar.append(buildDocAppend("Prime-Algorithms.md", "Prime Algorithms Overview"));
+        sidebar.append(buildDocAppend("Trial.md", "Trial Algorithm"));
+        sidebar.append(buildDocAppend("Sieve.md", "Sieve Algorithm"));
+        sidebar.append(buildDocAppend("Atkin.md", "Atkin Algorithm"));
+        sidebar.append(buildDocAppend("Miller.md", "Miller Algorithm"));
+
+        sidebar.append("<h3>Testing and Performance Info</h3><ul>");
+        sidebar.append(buildDocAppend("Testing.md", "Testing"));
         sidebar.append("<li><a href='/jacoco/index.html' target='_blank'>JaCoCo Coverage Report</a></li>");
+        sidebar.append(buildDocAppend("Error-Handling.md", "Error Handling"));
+        sidebar.append(buildDocAppend("Performance.md", "Performance"));
+
+        sidebar.append("<h3>Other Info</h3><ul>");
+        sidebar.append(buildDocAppend("RestApis.md", "RestApis"));
+        sidebar.append(buildDocAppend("Technologies-Used.md", "Technologies Used"));
 
 
-        for (String name : filenames) {
-            sidebar.append(String.format("<li><a href=\"/docs/view/%s\">%s</a></li>", name, name));
-        }
+
         sidebar.append("</ul></div>");
 
         // 🧮 Recent requests section
@@ -79,6 +94,11 @@ public class HtmlHelper {
 
         sidebar.append("</div>");
         return sidebar.toString();
+    }
+
+    public static String buildDocAppend(String docPath, String docName){
+        return "<li><a href='/docs/view/"+docPath+"'>"+docName+"</a></li>";
+
     }
 
     public static String buildRequestForm() {
@@ -299,6 +319,9 @@ public class HtmlHelper {
             
                                   h1, h2, h3 {
                                     color: #333;
+                                  }
+                                  h3 {
+                                    margin-top: 1.5rem;
                                   }
             
                                   a {

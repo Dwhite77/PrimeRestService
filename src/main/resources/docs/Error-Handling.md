@@ -1,10 +1,10 @@
-# Error Handling Overview
+# ⚠️ Error Handling Overview
 
 This document outlines all handled errors in the Prime API, including their causes, HTTP status codes, and expected error messages. Each error is returned as a structured `ErrorPayload` object for consistent client-side handling and debugging.
 
 ---
 
-## Error Format
+## ⚠️ Error Format
 
 All errors follow this structure:
 
@@ -19,7 +19,7 @@ All errors follow this structure:
 
 ---
 
-## Handled Errors
+## ⚠️ Handled Errors
 ```
 | Error Name                            | When It Occurs                                                                 | Status Code | Error Label           | Example Message                                                                 |
 |-------------------------------------------|----------------------------------------------------------------------------|-------------|-----------------------|---------------------------------------------------------------------------------|
@@ -123,12 +123,22 @@ Each error is described with its trigger condition, HTTP status code, label, and
 
 ---
 
+### ⚠️ `NoResourceFoundException`
+- **Occurs When**: A valid endpoint is hit, but the requested resource (e.g. file, entity, or record) is missing or unavailable
+- **Status Code**: `404`
+- **Label**: Not Found
+- **Example**:  
+  `Resource not found: file 'docs/view/intro.md' does not exist`
+
+---
+
 ### ⚠️ `Exception` (Generic Fallback)
 - **Occurs When**: Any unhandled exception
 - **Status Code**: `500`
 - **Label**: Internal Server Error
 - **Example**:  
   `Unexpected error occurred`
+
 
 ---
 ## ErrorPayload Builder Methods
