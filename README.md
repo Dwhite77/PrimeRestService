@@ -220,12 +220,12 @@ Coverage is tracked via **JaCoCo**, including:
 
 ## 📄 Documentation Index
 
-- [Prime Algorithms Overview](/docs/view/Prime-Algorithms.md)
-- [Trial Division](/docs/view/Trial.md)
-- [Sieve of Eratosthenes](/docs/view/Sieve.md)
-- [Sieve of Atkin](/docs/view/Atkin.md)
-- [Miller-Rabin Test](/docs/view/Miller.md)
-- [Error Handling](/docs/view/Error-Handling.md)
+- [Prime Algorithms Overview](https://primerestservice.onrender.com/docs/view/Prime-Algorithms.md)
+- [Trial Division](https://primerestservice.onrender.com/docs/view/Trial.md)
+- [Sieve of Eratosthenes](https://primerestservice.onrender.com/docs/view/Sieve.md)
+- [Sieve of Atkin](https://primerestservice.onrender.com/docs/view/Atkin.md)
+- [Miller-Rabin Test](https://primerestservice.onrender.com/docs/view/Miller.md)
+- [Error Handling](https://primerestservice.onrender.com/docs/view/Error-Handling.md)
 - [Jacoco Report](https://primerestservice.onrender.com/jacoco/index.html)
 
 ---
