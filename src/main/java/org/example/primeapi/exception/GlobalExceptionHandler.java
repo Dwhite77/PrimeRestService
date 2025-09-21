@@ -27,14 +27,14 @@ public class GlobalExceptionHandler {
                 ex.getName(),
                 ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown",
                 ex.getValue() != null ? ex.getValue().toString() : "null");
-        log.warn("⚠️ Type mismatch on '{}': {}", ex.getName(), message);
+        log.warn("Type mismatch on '{}': {}", ex.getName(), message);
         return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest(message, request), 400));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<APIResponse> handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest request) {
         String message = String.format("Missing required parameter '%s' of type '%s'", ex.getParameterName(), ex.getParameterType());
-        log.warn("⚠️ Missing parameter '{}': expected type '{}'", ex.getParameterName(), ex.getParameterType());
+        log.warn("Missing parameter '{}': expected type '{}'", ex.getParameterName(), ex.getParameterType());
         return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest(message, request), 400));
     }
 
@@ -80,19 +80,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<APIResponse> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         String message = "Illegal argument: " + ex.getMessage();
-        log.warn("⚠️ IllegalArgumentException at '{}': {}", request.getRequestURI(), message);
+        log.warn("IllegalArgumentException at '{}': {}", request.getRequestURI(), message);
         return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest(message, request), 400));
     }
 
     @ExceptionHandler(MalformedChunkCodingException.class)
-    public void handleChunkError(MalformedChunkCodingException ex, HttpServletRequest request) {
+    public ResponseEntity<APIResponse> handleChunkError(MalformedChunkCodingException ex, HttpServletRequest request) {
         log.warn("Chunked response failed at '{}': {}", request.getRequestURI(), ex.getMessage());
+        return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest("Malformed Chunk Coding Exception", request), 400));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<APIResponse> handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
         String message = "Resource not found: " + ex.getMessage();
-        log.warn("🔍 NoResourceFoundException at '{}': {}", request.getRequestURI(), message);
+        log.warn("NoResourceFoundException at '{}': {}", request.getRequestURI(), message);
         return ResponseEntity.status(404).body(APIResponse.error(ErrorResponseBuilder.notFound(message, request), 404));
     }
 

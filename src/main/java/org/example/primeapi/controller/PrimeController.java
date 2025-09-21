@@ -115,7 +115,7 @@ public class PrimeController {
     @Hidden
     @GetMapping
     public RedirectView redirectToInfo() {
-        return new RedirectView("/api/info");
+        return new RedirectView("/docs");
     }
 
 
