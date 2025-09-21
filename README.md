@@ -1,7 +1,7 @@
 # 🧮 PrimeAPI
 
 ### 🔗 [Main Render Deployment Page](https://primerestservice.onrender.com/) : https://primerestservice.onrender.com/
-
+### 🔗 [Swagger Link](https://primerestservice.onrender.com/swagger-ui/index.html)
 PrimeAPI is a modular, high-performance Java application for generating prime numbers using multiple algorithms. It exposes a RESTful API, supports parallel execution, and includes a built-in documentation viewer powered by Markdown and HTML rendering.
 
 ---
@@ -163,7 +163,7 @@ Coverage is tracked via **JaCoCo**, including:
 - Spring Boot
 - JUnit 5
 - RestAssured
-- Swagger/OpenAPI
+- [Swagger](https://primerestservice.onrender.com/swagger-ui/index.html)/OpenAPI
 - Markdown + HTML rendering
 - JaCoCo
 - ConcurrentMapCacheManager
