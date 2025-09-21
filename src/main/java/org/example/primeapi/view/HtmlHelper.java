@@ -542,16 +542,37 @@ public class HtmlHelper {
                                          // Also open in new tab with parsed content
                                          const reader = new FileReader();
                                          reader.onload = function () {
-                                           const blob = new Blob([reader.result], { type: format });
-                                           const tabUrl = URL.createObjectURL(blob);
-                                           window.open(tabUrl, "_blank");
+                                           let formatted = reader.result;
+            
+                                             if (format.includes("json")) {
+                                               try {
+                                                 const parsed = JSON.parse(reader.result);
+                                                 formatted = JSON.stringify(parsed, null, 2); // Pretty-print JSON
+                                               } catch (e) {
+                                                 console.warn("Failed to parse JSON:", e);
+                                               }
+                                             }
+
+                                             const blob = new Blob([formatted], { type: format });
+                                             const tabUrl = URL.createObjectURL(blob);
+                                             window.open(tabUrl, "_blank");
                                          };
                                          reader.readAsText(data);
                                        } else {
                                          refreshRecentRequests();
             
-                                         // Open parsed content in new tab
-                                         const blob = new Blob([data], { type: format });
+                                         // Check if response is JSON and pretty-print it
+                                         let formatted = data;
+                                         if (format.includes("json")) {
+                                           try {
+                                             const parsed = JSON.parse(data);
+                                             formatted = JSON.stringify(parsed, null, 2); // Pretty-print with 2-space indentation
+                                           } catch (e) {
+                                             console.warn("Failed to parse JSON:", e);
+                                           }
+                                         }
+            
+                                         const blob = new Blob([formatted], { type: format });
                                          const tabUrl = URL.createObjectURL(blob);
                                          window.open(tabUrl, "_blank");
                                        }
