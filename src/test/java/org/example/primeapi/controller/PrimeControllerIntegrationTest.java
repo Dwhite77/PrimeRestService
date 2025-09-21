@@ -374,7 +374,7 @@ public class PrimeControllerIntegrationTest {
 
         response.then()
                 .statusCode(302) // Spring issues a 302 redirect
-                .header("Location", containsString("/api/info"));
+                .header("Location", containsString("/docs"));
     }
 
     @Test
@@ -401,8 +401,7 @@ public class PrimeControllerIntegrationTest {
         response.then()
                 .statusCode(200)
                 .contentType(containsString("text/html"))
-                .body(containsString("Prime API Landing Page"))
-                .body(containsString("Documentation"));
+                .body(containsString("Documentation Viewer"));
     }
 
 

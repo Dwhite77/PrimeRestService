@@ -6,6 +6,18 @@ PrimeAPI is a modular, high-performance Java application for generating prime nu
 
 ---
 
+## Project Set-up
+```
+- git clone [https://github.com/Dwhite77/PrimeRestService.git](https://github.com/Dwhite77/PrimeRestService.git)
+
+cd PrimeRestService
+
+mvn clean install
+
+mvn spring-boot:run
+```
+
+---
 ## 🚀 Features
 
 - Multiple prime generation algorithms: Trial Division, Sieve of Eratosthenes, Sieve of Atkin, Miller–Rabin
@@ -15,7 +27,7 @@ PrimeAPI is a modular, high-performance Java application for generating prime nu
 - Markdown-based documentation portal with sidebar navigation
 - Structured error handling and fallback responses
 - Benchmarking and performance logging
-- Full test coverage with JaCoCo (92%)
+- Test coverage with JaCoCo (92%)
 
 ---
 
@@ -35,7 +47,67 @@ Each algorithm implements the `PrimeAlgorithm` interface and is registered via S
 ## 📦 API Endpoints
 
 ### `/api/primes`
-- https://primerestservice.onrender.com/api/primes?limit=1000&algorithm=sieve&threads=2
+- https://primerestservice.onrender.com/api/primes?limit=100&algorithm=sieve&threads=2 Headers: Accept: application/xml
+```xml
+<APIResponse>
+  <httpStatus>200</httpStatus>
+  <data>
+    <algorithm>sieve</algorithm>
+    <limit>100</limit>
+    <threads>2</threads>
+    <primes>
+      <prime>2</prime>
+      <prime>3</prime>
+      <prime>5</prime>
+      <prime>7</prime>
+      <prime>11</prime>
+      <prime>13</prime>
+      <prime>17</prime>
+      <prime>19</prime>
+      <prime>23</prime>
+      <prime>29</prime>
+      <prime>31</prime>
+      <prime>37</prime>
+      <prime>41</prime>
+      <prime>43</prime>
+      <prime>47</prime>
+      <prime>53</prime>
+      <prime>59</prime>
+      <prime>61</prime>
+      <prime>67</prime>
+      <prime>71</prime>
+      <prime>73</prime>
+      <prime>79</prime>
+      <prime>83</prime>
+      <prime>89</prime>
+      <prime>97</prime>
+    </primes>
+    <total>25</total>
+    <durationMs>1</durationMs>
+  </data>
+  <timestamp>21-09-2025 11:37:57</timestamp>
+  <successful>true</successful>
+</APIResponse>
+```
+
+Or Headers: Accept: application/json
+
+```json
+{
+  "httpStatus": 200,
+  "data": {
+    "algorithm": "sieve",
+    "limit": 100,
+    "threads": 2,
+    "primes": [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97],
+    "total": 25,
+    "durationMs": 3
+  },
+  "timestamp": "21-09-2025 12:45:24",
+  "successful": true
+}
+
+```
 - Generates prime numbers using the specified algorithm.
 
 **Query Parameters:**
@@ -129,6 +201,7 @@ Coverage is tracked via **JaCoCo**, including:
 - Configurable via environment variables:
   - `MAXLIMIT` (default: 1,000,000,000)
   - `MAXTHREADS` (default: 128)
+  - You can alter these but the application has not been tested beyond these limits so may be unstable
 - Compatible with Render and other cloud platforms
 - Static resources and documentation are bundled into the JAR
 
@@ -147,12 +220,12 @@ Coverage is tracked via **JaCoCo**, including:
 
 ## 📄 Documentation Index
 
-- [Prime Algorithms Overview](/docs/view/Prime-Algorithms.md)
-- [Trial Division](/docs/view/Trial.md)
-- [Sieve of Eratosthenes](/docs/view/Sieve.md)
-- [Sieve of Atkin](/docs/view/Atkin.md)
-- [Miller-Rabin Test](/docs/view/Miller.md)
-- [Error Handling](/docs/view/Error-Handling.md)
+- [Prime Algorithms Overview](https://primerestservice.onrender.com/docs/view/Prime-Algorithms.md)
+- [Trial Division](https://primerestservice.onrender.com/docs/view/Trial.md)
+- [Sieve of Eratosthenes](https://primerestservice.onrender.com/docs/view/Sieve.md)
+- [Sieve of Atkin](https://primerestservice.onrender.com/docs/view/Atkin.md)
+- [Miller-Rabin Test](https://primerestservice.onrender.com/docs/view/Miller.md)
+- [Error Handling](https://primerestservice.onrender.com/docs/view/Error-Handling.md)
 - [Jacoco Report](https://primerestservice.onrender.com/jacoco/index.html)
 
 ---
