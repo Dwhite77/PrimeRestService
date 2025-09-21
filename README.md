@@ -27,7 +27,7 @@ mvn spring-boot:run
 - Markdown-based documentation portal with sidebar navigation
 - Structured error handling and fallback responses
 - Benchmarking and performance logging
-- Full test coverage with JaCoCo (92%)
+- Test coverage with JaCoCo (92%)
 
 ---
 
@@ -199,6 +199,7 @@ Coverage is tracked via **JaCoCo**, including:
 - Configurable via environment variables:
   - `MAXLIMIT` (default: 1,000,000,000)
   - `MAXTHREADS` (default: 128)
+  - You can alter these but the application has not been tested beyond these limits so may be unstable
 - Compatible with Render and other cloud platforms
 - Static resources and documentation are bundled into the JAR
 

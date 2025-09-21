@@ -27,14 +27,14 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 <span class="fc" id="L27">                ex.getName(),</span>
 <span class="pc bpc" id="L28" title="1 of 2 branches missed.">                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : &quot;unknown&quot;,</span>
 <span class="pc bpc" id="L29" title="1 of 2 branches missed.">                ex.getValue() != null ? ex.getValue().toString() : &quot;null&quot;);</span>
-<span class="fc" id="L30">        log.warn(&quot;⚠️ Type mismatch on '{}': {}&quot;, ex.getName(), message);</span>
+<span class="fc" id="L30">        log.warn(&quot;Type mismatch on '{}': {}&quot;, ex.getName(), message);</span>
 <span class="fc" id="L31">        return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest(message, request), 400));</span>
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity&lt;APIResponse&gt; handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest request) {
 <span class="fc" id="L36">        String message = String.format(&quot;Missing required parameter '%s' of type '%s'&quot;, ex.getParameterName(), ex.getParameterType());</span>
-<span class="fc" id="L37">        log.warn(&quot;⚠️ Missing parameter '{}': expected type '{}'&quot;, ex.getParameterName(), ex.getParameterType());</span>
+<span class="fc" id="L37">        log.warn(&quot;Missing parameter '{}': expected type '{}'&quot;, ex.getParameterName(), ex.getParameterType());</span>
 <span class="fc" id="L38">        return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest(message, request), 400));</span>
     }
 
@@ -80,20 +80,21 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity&lt;APIResponse&gt; handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
 <span class="fc" id="L82">        String message = &quot;Illegal argument: &quot; + ex.getMessage();</span>
-<span class="fc" id="L83">        log.warn(&quot;⚠️ IllegalArgumentException at '{}': {}&quot;, request.getRequestURI(), message);</span>
+<span class="fc" id="L83">        log.warn(&quot;IllegalArgumentException at '{}': {}&quot;, request.getRequestURI(), message);</span>
 <span class="fc" id="L84">        return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest(message, request), 400));</span>
     }
 
     @ExceptionHandler(MalformedChunkCodingException.class)
-    public void handleChunkError(MalformedChunkCodingException ex, HttpServletRequest request) {
+    public ResponseEntity&lt;APIResponse&gt; handleChunkError(MalformedChunkCodingException ex, HttpServletRequest request) {
 <span class="nc" id="L89">        log.warn(&quot;Chunked response failed at '{}': {}&quot;, request.getRequestURI(), ex.getMessage());</span>
-<span class="nc" id="L90">    }</span>
+<span class="nc" id="L90">        return ResponseEntity.status(400).body(APIResponse.error(ErrorResponseBuilder.badRequest(&quot;Malformed Chunk Coding Exception&quot;, request), 400));</span>
+    }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity&lt;APIResponse&gt; handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
-<span class="fc" id="L94">        String message = &quot;Resource not found: &quot; + ex.getMessage();</span>
-<span class="fc" id="L95">        log.warn(&quot;🔍 NoResourceFoundException at '{}': {}&quot;, request.getRequestURI(), message);</span>
-<span class="fc" id="L96">        return ResponseEntity.status(404).body(APIResponse.error(ErrorResponseBuilder.notFound(message, request), 404));</span>
+<span class="fc" id="L95">        String message = &quot;Resource not found: &quot; + ex.getMessage();</span>
+<span class="fc" id="L96">        log.warn(&quot;NoResourceFoundException at '{}': {}&quot;, request.getRequestURI(), message);</span>
+<span class="fc" id="L97">        return ResponseEntity.status(404).body(APIResponse.error(ErrorResponseBuilder.notFound(message, request), 404));</span>
     }
 
 
