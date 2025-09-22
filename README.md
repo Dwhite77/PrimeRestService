@@ -234,6 +234,8 @@ Coverage is tracked via **JaCoCo**, including:
 
 - Java 17+
 - Spring Boot
+- Microsoft CoPilot (To speed up Code generation, Documentation generation, Test generation and Refactoring)
+- GitLab Duo (To speed up Code generation, Documentation generation, Test generation and Refactoring)
 - JUnit 5
 - RestAssured
 - [Swagger](https://primerestservice.onrender.com/swagger-ui/index.html)/OpenAPI
