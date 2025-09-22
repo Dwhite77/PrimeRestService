@@ -120,11 +120,11 @@ Returns a `PrimePayload` with algorithm name, limit, thread count, prime list, t
 
 ### `/api/info`
 - https://primerestservice.onrender.com/api/info
-- Returns the landing page HTML with links to documentation.
+- Returns the landing page HTML with links to documentation. (No longer the landing page)
 
 ### `/docs`
 - https://primerestservice.onrender.com/docs
-- Lists available Markdown documentation files.
+- Lists available Markdown documentation files. (This is the new landing page)
 
 ### `/docs/view/{filename}`
 - https://primerestservice.onrender.com/docs/view/Atkin.md
