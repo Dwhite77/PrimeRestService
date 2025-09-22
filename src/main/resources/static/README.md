@@ -1,8 +1,4 @@
-# PrimeRestService
-A Restful service which calculates and returns all the prime numbers up to and including a number provided
-
-### This will shortly be updated for now we will just store the requirements here for ease of access
-
+# Requirements
 
 # Technical Assessment – Backend developer
 
