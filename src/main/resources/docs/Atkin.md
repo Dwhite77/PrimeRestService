@@ -23,13 +23,14 @@ This approach filters candidates using number-theoretic properties before confir
 
 ## ⏱️ Time Complexity
 
-The Sieve of Atkin also runs in **O(n log log n)** time, similar to Eratosthenes, but with fewer redundant operations.
+The Sieve of Atkin runs in **O(n)** time, rather than **O(n log log n)**, because each of its three main phases scales linearly with the input size.
 
-- Modular filters reduce the number of candidates early.
-- Only square multiples are eliminated, not all multiples.
-- Skips even numbers entirely.
+- Modular filtering over all integer pairs (x, y) up to √n performs O(n) toggles in total.
+- Eliminating multiples of prime squares requires  
+  ∑ₚ≤√n O(n/p²) = O(n) operations.
+- Scanning the boolean array of length n to collect confirmed primes takes O(n).
 
-This makes Atkin more efficient for large ranges, especially when paired with segmentation and parallelism.
+By focusing only on modular constraints and square multiples—rather than marking every multiple of each prime—Atkin removes the log log n factor present in Eratosthenes’ method, yielding a true linear bound.
 
 ---
 
