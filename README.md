@@ -8,7 +8,7 @@ PrimeAPI is a modular, high-performance Java application for generating prime nu
 
 ## Project Set-up
 ```
-- git clone [https://github.com/Dwhite77/PrimeRestService.git](https://github.com/Dwhite77/PrimeRestService.git)
+- git clone https://github.com/Dwhite77/PrimeRestService.git
 
 cd PrimeRestService
 
