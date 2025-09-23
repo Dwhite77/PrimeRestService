@@ -59,12 +59,6 @@ Clients can enable caching by setting `useCache=true` in the query string:
 GET /api/primes?algorithm=atkin&limit=1000000&threads=4&useCache=true
 ```
 
-
-#### 📊 Observed Performance Gains
-Performance improvements vary by algorithm, input size, and thread count. Integration tests have shown significant speedups for repeated requests with caching enabled.
-
-> Placeholder: Insert benchmark results here once finalized (e.g. uncached vs cached durations for each algorithm at 1M limit)
-
 #### 🧪 Integration Test Coverage
 Caching behavior is validated through full integration tests that:
 - Measure uncached vs cached execution time
@@ -84,10 +78,6 @@ Caching behavior is validated through full integration tests that:
 - Global exception handler avoids stack traces and ensures structured error payloads.
 - Invalid parameters, unsupported algorithms, and malformed requests are handled gracefully.
 - `ErrorResponseBuilder` centralizes error formatting for consistency.
-
-### 🗂 Documentation Caching
-- Markdown rendering is cached using `ConcurrentMapCacheManager` under the `"docs"` cache.
-- Improves performance when rendering frequently accessed documentation files.
 
 ---
 
