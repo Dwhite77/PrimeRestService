@@ -28,6 +28,8 @@ The Miller–Rabin test runs in **O(k log³ n)** time per number, where `k` is t
 
 Unlike sieves, this test doesn’t eliminate composites systematically—it checks each number individually.
 
+Total time Complexity: O(N · k · log³ N) 
+
 ---
 
 ## 🧩 Range-Based Execution
