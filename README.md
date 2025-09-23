@@ -33,14 +33,15 @@ mvn spring-boot:run
 
 ## 🧠 Algorithms
 
+
 Each algorithm implements the `PrimeAlgorithm` interface and is registered via Spring’s dependency injection. Parallelization is handled by `AbstractPrimeAlgorithm` using `ThreadPoolManager`.
 
 | Algorithm              | Time Complexity        | Use Case Notes                                      |
 |------------------------|------------------------|-----------------------------------------------------|
-| Trial Division         | O(√n)                  | Simple, slow; good for small inputs or teaching     |
-| Sieve of Eratosthenes  | O(n log log n)         | Fast for generating all primes up to n              |
+| Trial Division         | O(N · √N)              | Simple, slow; good for small inputs                 |
+| Sieve of Eratosthenes  | O(n*log(log(n)))       | Fast for generating all primes up to n              |
 | Sieve of Atkin         | O(n) (theoretical)     | Complex; faster than Eratosthenes for large n       |
-| Miller–Rabin           | O(k log³ n)            | Probabilistic; efficient for testing one number     |
+| Miller–Rabin           | O(N · k · log³ N)      | Probabilistic; efficient for testing one number     |
 
 ---
 
